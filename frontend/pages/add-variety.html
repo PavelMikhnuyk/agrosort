@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Добавить сорт — AgroSort</title>
+<link rel="stylesheet" href="/css/main.css">
+<style>
+.form-section{background:#fff;border:1px solid #e0ddd4;border-radius:var(--radius);padding:1.8rem;margin-bottom:1.2rem}
+.form-section-title{font-size:.72rem;text-transform:uppercase;letter-spacing:.12em;color:var(--g3);font-weight:500;margin-bottom:1.2rem;padding-bottom:.8rem;border-bottom:1px solid #eee}
+.form-row-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem}
+.resist-row{display:grid;grid-template-columns:repeat(3,1fr);gap:1.5rem}
+.stars-input{display:flex;gap:5px;margin-top:.4rem}
+.star-btn{width:30px;height:30px;border:1.5px solid #ddd;background:#fff;border-radius:4px;cursor:pointer;font-size:16px;transition:all .15s;display:flex;align-items:center;justify-content:center;color:#ccc}
+.star-btn.active{background:var(--a);border-color:var(--a);color:#fff}
+.star-btn:hover{border-color:var(--a);color:var(--a)}
+.regions-checkboxes{display:grid;grid-template-columns:1fr 1fr;gap:.4rem;margin-top:.5rem}
+.region-check{display:flex;align-items:center;gap:.5rem;font-size:.82rem;color:var(--b);cursor:pointer}
+.region-check input{accent-color:var(--g3);width:14px;height:14px}
+.form-hint{font-size:.72rem;color:var(--gray);margin-top:.25rem}
+.submit-bar{display:flex;align-items:center;gap:1rem;background:#fff;border:1px solid #e0ddd4;border-radius:var(--radius);padding:1.2rem 1.8rem;position:sticky;bottom:1rem;box-shadow:0 4px 16px rgba(0,0,0,.1)}
+</style>
+</head>
+<body>
+<nav class="navbar">
+  <div class="nav-inner">
+    <a href="/" class="logo">Agro<span>Sort</span></a>
+    <ul class="nav-links">
+      <li><a href="/pages/catalog.html">Каталог</a></li>
+      <li><a href="/pages/dashboard.html">Кабинет</a></li>
+    </ul>
+    <div class="nav-auth" id="navAuth"></div>
+  </div>
+</nav>
+
+<div class="form-page" style="max-width:860px">
+  <div class="breadcrumb">
+    <a href="/">Главная</a><span>›</span>
+    <a href="/pages/dashboard.html">Кабинет</a><span>›</span>
+    <span id="pageMode">Добавить сорт</span>
+  </div>
+  <div class="page-header">
+    <h1 class="page-title" id="pageTitle">Новый сорт</h1>
+    <p class="page-sub">Заполните характеристики сорта для добавления в реестр</p>
+  </div>
+
+  <div class="form-error" id="formError" style="margin-bottom:1rem"></div>
+  <div class="form-success" id="formSuccess" style="margin-bottom:1rem"></div>
+
+  <div class="form-section">
+    <div class="form-section-title">Изображение</div>
+    <div style="display:flex;gap:1.5rem;align-items:flex-start;flex-wrap:wrap">
+      <div id="imagePreview" style="width:200px;height:150px;background:#f5f5f5;border-radius:var(--radius);display:flex;align-items:center;justify-content:center;overflow:hidden">
+        <span style="color:var(--gray);font-size:.8rem">Нет фото</span>
+      </div>
+      <div style="flex:1;min-width:200px">
+        <input type="file" id="fImage" accept="image/*" style="display:none" onchange="previewImage(this)">
+        <button type="button" class="btn-outline" onclick="document.getElementById('fImage').click()">Выбрать файл</button>
+        <div class="form-hint">JPG, PNG или WebP, макс. 5 МБ</div>
+        <div id="imageStatus" style="margin-top:.5rem;font-size:.82rem;color:var(--g3)"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="form-section">
+    <div class="form-section-title">Основная информация</div>
+    <div class="form-row" style="margin-bottom:1rem">
+      <div class="form-group" style="flex:2">
+        <label class="form-label">Название сорта *</label>
+        <input class="form-input" id="fName" placeholder="Например: Московская 39">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Культура *</label>
+        <select class="form-select" id="fCulture">
+          <option value="">Выберите культуру</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Регистрационный номер</label>
+        <input class="form-input" id="fRegNum" placeholder="РСД-XXXXX">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Год регистрации</label>
+        <input class="form-input" type="number" id="fYear" placeholder="2020" min="1900" max="2025">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Статус</label>
+        <select class="form-select" id="fStatus">
+          <option value="active">Допущен к использованию</option>
+          <option value="pending">На рассмотрении</option>
+          <option value="excluded">Исключён из реестра</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Оригинатор / Селекционер</label>
+        <input class="form-input" id="fBreeder" placeholder="ФГБНУ, ВИР им. Вавилова...">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Страна происхождения</label>
+        <input class="form-input" id="fCountry" value="Беларусь">
+      </div>
+    </div>
+  </div>
+
+  <div class="form-section">
+    <div class="form-section-title">Агрономические характеристики</div>
+    <div class="form-row-3" style="margin-bottom:1rem">
+      <div class="form-group">
+        <label class="form-label">Урожайность от</label>
+        <input class="form-input" type="number" id="fYieldMin" placeholder="3.5" step="0.1">
+        <div class="form-hint">т/га (или единиц измерения)</div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Урожайность до</label>
+        <input class="form-input" type="number" id="fYieldMax" placeholder="7.0" step="0.1">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Единица измерения</label>
+        <select class="form-select" id="fYieldUnit">
+          <option value="т/га">т/га</option>
+          <option value="ц/га">ц/га</option>
+          <option value="кг/га">кг/га</option>
+          <option value="шт/га">шт/га</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group" style="max-width:250px;margin-bottom:1.2rem">
+      <label class="form-label">Вегетационный период (дней)</label>
+      <input class="form-input" type="number" id="fVegDays" placeholder="90" min="1" max="400">
+    </div>
+    <div class="resist-row">
+      <div>
+        <div class="form-label">Морозостойкость</div>
+        <div class="stars-input" id="frostStars" data-val="0"></div>
+        <div class="form-hint">1 — низкая, 5 — высокая</div>
+      </div>
+      <div>
+        <div class="form-label">Засухоустойчивость</div>
+        <div class="stars-input" id="droughtStars" data-val="0"></div>
+      </div>
+      <div>
+        <div class="form-label">Устойчивость к болезням</div>
+        <div class="stars-input" id="diseaseStars" data-val="0"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="form-section">
+    <div class="form-section-title">Регионы допуска</div>
+    <div class="regions-checkboxes" id="regionsContainer"></div>
+  </div>
+
+  <div class="form-section">
+    <div class="form-section-title">Описание</div>
+    <div class="form-group">
+      <label class="form-label">Описание сорта</label>
+      <textarea class="form-input" id="fDesc" rows="5" placeholder="Краткое описание агрономических особенностей..." style="resize:vertical;line-height:1.6"></textarea>
+    </div>
+  </div>
+
+  <div class="submit-bar">
+    <button class="btn-primary" id="submitBtn" onclick="submitForm()">Сохранить сорт</button>
+    <a href="/pages/dashboard.html" class="btn-outline">Отмена</a>
+    <span id="submitStatus" style="font-size:.82rem;color:var(--gray)"></span>
+  </div>
+</div>
+
+<script src="/js/api.js"></script>
+<script src="/js/auth.js"></script>
+<script>
+requireAuth();
+updateNavAuth();
+
+let currentImage = null;
+
+function previewImage(input) {
+  if (input.files && input.files[0]) {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      document.getElementById('imagePreview').innerHTML = '<img src="' + e.target.result + '" style="width:100%;height:100%;object-fit:cover">';
+      document.getElementById('imageStatus').textContent = 'Выбрано: ' + input.files[0].name;
+    };
+    reader.readAsDataURL(input.files[0]);
+  }
+}
+
+async function uploadImage(varietyId) {
+  const fileInput = document.getElementById('fImage');
+  if (!fileInput.files[0]) return;
+  const formData = new FormData();
+  formData.append('image', fileInput.files[0]);
+  try {
+    const res = await fetch('/api/varieties/' + varietyId + '/image', {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + localStorage.getItem('token') },
+      body: formData
+    });
+    if (!res.ok) throw new Error('Ошибка загрузки');
+    document.getElementById('imageStatus').textContent = 'Загружено!';
+    return await res.json();
+  } catch(e) {
+    document.getElementById('imageStatus').textContent = 'Ошибка: ' + e.message;
+  }
+}
+
+const editId = new URLSearchParams(window.location.search).get('id');
+if (editId) {
+  document.getElementById('pageMode').textContent = 'Редактировать сорт';
+  document.getElementById('pageTitle').textContent = 'Редактирование сорта';
+}
+
+const regions = ['Брестская','Витебская','Гомельская','Гродненская','Могилёвская','Минская','Все области'];
+
+function buildStars(groupId) {
+  const group = document.getElementById(groupId);
+  group.innerHTML = '';
+  for (let i = 1; i <= 5; i++) {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'star-btn';
+    btn.dataset.n = i;
+    btn.textContent = '★';
+    btn.onclick = () => setStars(groupId, i);
+    group.appendChild(btn);
+  }
+}
+
+function buildRegions() {
+  const container = document.getElementById('regionsContainer');
+  container.innerHTML = regions.map(r =>
+    '<label class="region-check"><input type="checkbox" value="' + r + '" name="region"> ' + r + '</label>'
+  ).join('');
+}
+
+function setStars(groupId, val) {
+  const group = document.getElementById(groupId);
+  group.dataset.val = val;
+  group.querySelectorAll('.star-btn').forEach(btn => {
+    btn.classList.toggle('active', parseInt(btn.dataset.n) <= val);
+  });
+}
+
+async function loadCultures() {
+  const res = await api.get('/cultures');
+  const sel = document.getElementById('fCulture');
+  sel.innerHTML = '<option value="">Выберите культуру</option>' +
+    res.data.map(c => '<option value="' + c.id + '">' + (c.icon || '') + ' ' + c.name + '</option>').join('');
+}
+
+async function loadForEdit() {
+  if (!editId) return;
+  try {
+    const res = await api.get('/varieties/' + editId);
+    const v = res.data;
+    document.getElementById('fName').value = v.name || '';
+    document.getElementById('fCulture').value = v.cultureId || '';
+    document.getElementById('fRegNum').value = v.registrationNumber || '';
+    document.getElementById('fYear').value = v.yearRegistered || '';
+    document.getElementById('fStatus').value = v.status || 'active';
+    document.getElementById('fBreeder').value = v.breeder || '';
+    document.getElementById('fCountry').value = v.originCountry || 'Россия';
+    document.getElementById('fYieldMin').value = v.yieldMin || '';
+    document.getElementById('fYieldMax').value = v.yieldMax || '';
+    document.getElementById('fYieldUnit').value = v.yieldUnit || 'т/га';
+    document.getElementById('fVegDays').value = v.vegetationDays || '';
+    document.getElementById('fDesc').value = v.description || '';
+    if (v.frostResistance) setStars('frostStars', v.frostResistance);
+    if (v.droughtResistance) setStars('droughtStars', v.droughtResistance);
+    if (v.diseaseResistance) setStars('diseaseStars', v.diseaseResistance);
+    (v.admittedRegions || []).forEach(r => {
+      const cb = document.querySelector('input[value="' + r + '"]');
+      if (cb) cb.checked = true;
+    });
+    if (v.image) {
+      currentImage = v.image;
+      document.getElementById('imagePreview').innerHTML = '<img src="' + v.image + '" style="width:100%;height:100%;object-fit:cover">';
+      document.getElementById('imageStatus').textContent = 'Текущее изображение';
+    }
+    document.getElementById('pageTitle').textContent = v.name;
+  } catch(e) { showToast(e.message, 'error'); }
+}
+
+async function submitForm() {
+  const err = document.getElementById('formError');
+  const succ = document.getElementById('formSuccess');
+  const btn = document.getElementById('submitBtn');
+  err.style.display = 'none'; succ.style.display = 'none';
+
+  const name = document.getElementById('fName').value.trim();
+  const cultureId = document.getElementById('fCulture').value;
+  if (!name) { err.textContent = 'Укажите название сорта'; err.style.display = 'block'; return; }
+  if (!cultureId) { err.textContent = 'Выберите культуру'; err.style.display = 'block'; return; }
+
+  const selectedRegions = Array.from(document.querySelectorAll('input[name="region"]:checked')).map(cb => cb.value);
+  const body = {
+    name: name,
+    cultureId: parseInt(cultureId),
+    registrationNumber: document.getElementById('fRegNum').value.trim() || null,
+    yearRegistered: parseInt(document.getElementById('fYear').value) || null,
+    status: document.getElementById('fStatus').value,
+    breeder: document.getElementById('fBreeder').value.trim() || null,
+    originCountry: document.getElementById('fCountry').value.trim() || 'Россия',
+    yieldMin: parseFloat(document.getElementById('fYieldMin').value) || null,
+    yieldMax: parseFloat(document.getElementById('fYieldMax').value) || null,
+    yieldUnit: document.getElementById('fYieldUnit').value,
+    vegetationDays: parseInt(document.getElementById('fVegDays').value) || null,
+    frostResistance: parseInt(document.getElementById('frostStars').dataset.val) || null,
+    droughtResistance: parseInt(document.getElementById('droughtStars').dataset.val) || null,
+    diseaseResistance: parseInt(document.getElementById('diseaseStars').dataset.val) || null,
+    admittedRegions: selectedRegions,
+    description: document.getElementById('fDesc').value.trim() || null
+  };
+
+  btn.disabled = true; btn.textContent = 'Сохраняем...';
+  try {
+    let res;
+    if (editId) {
+      res = await api.put('/varieties/' + editId, body);
+      await uploadImage(editId);
+    } else {
+      res = await api.post('/varieties', body);
+      await uploadImage(res.data.id);
+    }
+    succ.textContent = 'Сорт "' + res.data.name + '" успешно сохранён';
+    succ.style.display = 'block';
+    showToast('Сохранено!', 'success');
+    setTimeout(() => { window.location.href = '/pages/variety.html?id=' + res.data.id; }, 1500);
+  } catch(e) {
+    err.textContent = e.message; err.style.display = 'block';
+    btn.disabled = false; btn.textContent = 'Сохранить сорт';
+  }
+}
+
+(async () => {
+  buildStars('frostStars');
+  buildStars('droughtStars');
+  buildStars('diseaseStars');
+  buildRegions();
+  await loadCultures();
+  await loadForEdit();
+})();
+</script>
+</body>
+</html>

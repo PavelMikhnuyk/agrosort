@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Администрирование — AgroSort</title>
+<link rel="stylesheet" href="/css/main.css">
+<style>
+.admin-layout{max-width:1200px;margin:0 auto;padding:2rem}
+.admin-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:2rem}
+.admin-title{font-size:1.5rem;font-weight:600;color:var(--b)}
+.admin-tabs{display:flex;gap:2px;background:var(--g6);border-radius:var(--radius);padding:3px;margin-bottom:1.5rem;width:fit-content}
+.admin-tab{padding:.6rem 1.2rem;border:none;background:transparent;font-family:inherit;font-size:.85rem;cursor:pointer;border-radius:4px;transition:all .2s;color:var(--g2);font-weight:500}
+.admin-tab.active{background:#fff;color:var(--g);box-shadow:0 1px 4px rgba(0,0,0,.1)}
+.admin-section{display:none}
+.admin-section.active{display:block}
+.admin-filters{background:#fff;border:1px solid #e0ddd4;border-radius:var(--radius);padding:1rem;margin-bottom:1rem;display:flex;gap:1rem;flex-wrap:wrap;align-items:center}
+.admin-filters input,.admin-filters select{padding:.5rem .8rem;border:1px solid #ddd;border-radius:var(--radius);font-family:inherit;font-size:.85rem}
+.admin-filters input:focus,.admin-filters select:focus{outline:none;border-color:var(--g3)}
+.users-table{background:#fff;border:1px solid #e0ddd4;border-radius:var(--radius);overflow:hidden}
+.users-table-header{display:grid;grid-template-columns:2fr 1.5fr 1fr 1.5fr 1fr;gap:1rem;padding:.7rem 1rem;background:var(--g6);font-size:.7rem;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--g3)}
+.users-table-row{display:grid;grid-template-columns:2fr 1.5fr 1fr 1.5fr 1fr;gap:1rem;padding:.85rem 1rem;border-bottom:1px solid #eee;align-items:center;font-size:.85rem}
+.users-table-row:last-child{border-bottom:none}
+.users-table-row:hover{background:#fafafa}
+.user-email{color:var(--gray);font-size:.78rem}
+.user-org{color:var(--g2);font-size:.78rem}
+.role-select{padding:.3rem .5rem;border:1px solid #ddd;border-radius:var(--radius);font-family:inherit;font-size:.75rem;background:#fff;cursor:pointer}
+.role-select:focus{outline:none;border-color:var(--g3)}
+.btn-action{padding:.35rem .7rem;border-radius:var(--radius);font-family:inherit;font-size:.7rem;cursor:pointer;transition:all .2s;border:1px solid #ddd;background:#fff}
+.btn-action:hover{background:var(--g6)}
+.btn-action.block{color:#c84a3a;border-color:#c84a3a}
+.btn-action.unblock{color:#2d6a2d;border-color:#2d6a2d}
+.btn-action.delete{color:#c84a3a;border-color:#c84a3a}
+.status-active{color:#2d6a2d;font-weight:500}
+.status-blocked{color:#c84a3a;font-weight:500}
+.cultures-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin-bottom:1rem}
+.culture-card{background:#fff;border:1px solid #e0ddd4;border-radius:var(--radius);padding:1rem;display:flex;align-items:center;gap:.8rem}
+.culture-card:hover{border-color:var(--g3)}
+.culture-icon{font-size:1.8rem}
+.culture-info{flex:1}
+.culture-name{font-weight:500;font-size:.9rem}
+.culture-count{font-size:.75rem;color:var(--gray)}
+.culture-actions{display:flex;gap:.4rem}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center;z-index:1000;display:none}
+.modal-overlay.active{display:flex}
+.modal{background:#fff;border-radius:var(--radius);padding:1.5rem;width:90%;max-width:400px}
+.modal-header{font-size:1.1rem;font-weight:600;margin-bottom:1rem}
+.modal-body{margin-bottom:1.5rem}
+.modal-actions{display:flex;gap:.8rem;justify-content:flex-end}
+.form-group{margin-bottom:1rem}
+.form-label{display:block;font-size:.8rem;font-weight:500;margin-bottom:.35rem;color:var(--g2)}
+.form-input,.form-select{width:100%;padding:.6rem .8rem;border:1px solid #ddd;border-radius:var(--radius);font-family:inherit;font-size:.9rem}
+.form-input:focus,.form-select:focus{outline:none;border-color:var(--g3)}
+.empty-state{text-align:center;padding:3rem 1rem;color:var(--gray)}
+.pagination{display:flex;gap:.5rem;justify-content:center;margin-top:1.5rem}
+.pagination button{padding:.4rem .8rem;border:1px solid #ddd;border-radius:var(--radius);background:#fff;cursor:pointer;font-size:.8rem}
+.pagination button:hover{background:var(--g6)}
+.pagination button.active{background:var(--g);color:#fff;border-color:var(--g)}
+</style>
+</head>
+<body>
+<nav class="navbar">
+  <div class="nav-inner">
+    <a href="/" class="logo">Agro<span>Sort</span></a>
+    <ul class="nav-links">
+      <li><a href="/pages/catalog.html">Каталог</a></li>
+      <li><a href="/pages/dashboard.html">Кабинет</a></li>
+    </ul>
+    <div class="nav-auth" id="navAuth"></div>
+  </div>
+</nav>
+
+<div class="admin-layout">
+  <div class="admin-header">
+    <h1 class="admin-title">Администрирование</h1>
+  </div>
+
+  <div class="admin-tabs">
+    <button class="admin-tab active" onclick="switchAdminTab('users',this)">👥 Пользователи</button>
+    <button class="admin-tab" onclick="switchAdminTab('cultures',this)">🌱 Культуры</button>
+  </div>
+
+  <!-- USERS SECTION -->
+  <div class="admin-section active" id="section-users">
+    <div class="admin-filters">
+      <input type="text" id="userSearch" placeholder="Поиск по имени, email, организации..." style="flex:1;min-width:200px" onkeyup="loadUsers()">
+      <select id="userRoleFilter" onchange="loadUsers()">
+        <option value="">Все роли</option>
+        <option value="admin">Администратор</option>
+        <option value="agronomist">Агроном</option>
+        <option value="viewer">Наблюдатель</option>
+      </select>
+      <select id="userBlockFilter" onchange="loadUsers()">
+        <option value="">Все</option>
+        <option value="false">Активные</option>
+        <option value="true">Заблокированные</option>
+      </select>
+    </div>
+    <div class="users-table">
+      <div class="users-table-header">
+        <span>Пользователь</span>
+        <span>Организация</span>
+        <span>Роль</span>
+        <span>Статус</span>
+        <span>Действия</span>
+      </div>
+      <div id="usersList"><div class="empty-state">Загрузка...</div></div>
+    </div>
+    <div class="pagination" id="usersPagination"></div>
+  </div>
+
+  <!-- CULTURES SECTION -->
+  <div class="admin-section" id="section-cultures">
+    <div class="admin-filters">
+      <button class="btn-primary" onclick="openCultureModal()">+ Добавить культуру</button>
+      <button class="btn-secondary" onclick="loadCultures()">🔄 Обновить</button>
+    </div>
+    <div class="cultures-grid" id="culturesList">
+      <div class="empty-state">Загрузка...</div>
+    </div>
+  </div>
+</div>
+
+<!-- Culture Modal -->
+<div class="modal-overlay" id="cultureModal">
+  <div class="modal">
+    <div class="modal-header" id="cultureModalTitle">Добавить культуру</div>
+    <div class="modal-body">
+      <input type="hidden" id="cultureId">
+      <div class="form-group">
+        <label class="form-label">Название</label>
+        <input type="text" class="form-input" id="cultureName" placeholder="Например: Пшеница">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Иконка (эмодзи)</label>
+        <input type="text" class="form-input" id="cultureIcon" placeholder="🌾">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Категория</label>
+        <select class="form-select" id="cultureCategory">
+          <option value="Зерновые">Зерновые</option>
+          <option value="Зернобобовые">Зернобобовые</option>
+          <option value="Технические">Технические</option>
+          <option value="Овощные">Овощные</option>
+          <option value="Плодовые">Плодовые</option>
+          <option value="Ягодные">Ягодные</option>
+          <option value="Кормовые">Кормовые</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeCultureModal()">Отмена</button>
+      <button class="btn-primary" onclick="saveCulture()">Сохранить</button>
+    </div>
+  </div>
+</div>
+
+<script src="/js/api.js"></script>
+<script src="/js/auth.js"></script>
+<script>
+requireAuth({ admin: true });
+const user = getUser();
+
+let currentUserPage = 1;
+const USERS_PER_PAGE = 20;
+
+function switchAdminTab(tab, btn) {
+  document.querySelectorAll('.admin-section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.admin-tab').forEach(b => b.classList.remove('active'));
+  document.getElementById('section-' + tab).classList.add('active');
+  if (btn) btn.classList.add('active');
+  if (tab === 'users') loadUsers();
+  if (tab === 'cultures') loadCultures();
+}
+
+async function loadUsers(page = 1) {
+  currentUserPage = page;
+  const search = document.getElementById('userSearch').value;
+  const role = document.getElementById('userRoleFilter').value;
+  const blocked = document.getElementById('userBlockFilter').value;
+
+  try {
+    const params = { page, limit: USERS_PER_PAGE };
+    if (search) params.search = search;
+    if (role) params.role = role;
+    if (blocked) params.blocked = blocked;
+
+    const res = await admin.getUsers(params);
+    renderUsersList(res.data, res.pagination);
+  } catch(e) {
+    document.getElementById('usersList').innerHTML = `<div class="error-msg">${e.message}</div>`;
+  }
+}
+
+function renderUsersList(users, pagination) {
+  if (!users.length) {
+    document.getElementById('usersList').innerHTML = '<div class="empty-state">Пользователи не найдены</div>';
+    renderPagination(pagination, 'loadUsers');
+    return;
+  }
+
+  const roleLabels = { admin: 'Администратор', agronomist: 'Агроном', viewer: 'Наблюдатель' };
+  const roleOptions = ['viewer', 'agronomist', 'admin'];
+
+  document.getElementById('usersList').innerHTML = users.map(u => `
+    <div class="users-table-row">
+      <div>
+        <div style="font-weight:500">${u.name}</div>
+        <div class="user-email">${u.email}</div>
+        <div class="user-org">${u.region || ''} · ${u.createdAt?.split('T')[0] || ''}</div>
+      </div>
+      <div class="user-org">${u.organization || '—'}</div>
+      <div>
+        <select class="role-select" onchange="changeUserRole(${u.id}, this.value)" ${u.id === user.id ? 'disabled' : ''}>
+          ${roleOptions.map(r => `<option value="${r}" ${u.role === r ? 'selected' : ''}>${roleLabels[r]}</option>`).join('')}
+        </select>
+      </div>
+      <div>
+        <span class="${u.isActive ? 'status-active' : 'status-blocked'}">${u.isActive ? 'Активен' : 'Заблокирован'}</span>
+      </div>
+      <div style="display:flex;gap:.3rem">
+        ${u.id !== user.id ? `
+          <button class="btn-action ${u.isActive ? 'block' : 'unblock'}" onclick="toggleUserBlock(${u.id}, ${!u.isActive})">
+            ${u.isActive ? 'Заблокировать' : 'Разблокировать'}
+          </button>
+        ` : '<span style="font-size:.7rem;color:var(--gray)">—</span>'}
+      </div>
+    </div>
+  `).join('');
+
+  renderPagination(pagination, 'loadUsers');
+}
+
+function renderPagination(pagination, fn) {
+  if (!pagination || pagination.pages <= 1) {
+    document.getElementById('usersPagination').innerHTML = '';
+    return;
+  }
+
+  let html = '';
+  for (let i = 1; i <= pagination.pages; i++) {
+    html += `<button class="${i === pagination.page ? 'active' : ''}" onclick="${fn}(${i})">${i}</button>`;
+  }
+  document.getElementById('usersPagination').innerHTML = html;
+}
+
+async function changeUserRole(userId, role) {
+  try {
+    await admin.updateUserRole(userId, role);
+    showToast('Роль изменена', 'success');
+  } catch(e) {
+    showToast(e.message, 'error');
+    loadUsers(currentUserPage);
+  }
+}
+
+async function toggleUserBlock(userId, block) {
+  if (!confirm(block ? 'Заблокировать пользователя?' : 'Разблокировать пользователя?')) return;
+  try {
+    await admin.toggleUserBlock(userId);
+    showToast(block ? 'Пользователь заблокирован' : 'Пользователь разблокирован', 'success');
+    loadUsers(currentUserPage);
+  } catch(e) {
+    showToast(e.message, 'error');
+  }
+}
+
+async function loadCultures() {
+  try {
+    const res = await admin.getCultures();
+    renderCulturesList(res.data);
+  } catch(e) {
+    document.getElementById('culturesList').innerHTML = `<div class="error-msg">${e.message}</div>`;
+  }
+}
+
+function renderCulturesList(cultures) {
+  if (!cultures.length) {
+    document.getElementById('culturesList').innerHTML = '<div class="empty-state">Культуры не найдены</div>';
+    return;
+  }
+
+  document.getElementById('culturesList').innerHTML = cultures.map(c => `
+    <div class="culture-card">
+      <div class="culture-icon">${c.icon || '🌱'}</div>
+      <div class="culture-info">
+        <div class="culture-name">${c.name}</div>
+        <div class="culture-count">${c.dataValues?.varietyCount || 0} сортов · ${c.category || ''}</div>
+      </div>
+      <div class="culture-actions">
+        <button class="btn-action" onclick="openCultureModal(${c.id}, '${c.name}', '${c.icon}', '${c.category}')">Ред.</button>
+        <button class="btn-action delete" onclick="deleteCulture(${c.id})">Удалить</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function openCultureModal(id = null, name = '', icon = '🌱', category = '') {
+  document.getElementById('cultureId').value = id || '';
+  document.getElementById('cultureModalTitle').textContent = id ? 'Редактировать культуру' : 'Добавить культуру';
+  document.getElementById('cultureName').value = name;
+  document.getElementById('cultureIcon').value = icon;
+  document.getElementById('cultureCategory').value = category || 'Зерновые';
+  document.getElementById('cultureModal').classList.add('active');
+}
+
+function closeCultureModal() {
+  document.getElementById('cultureModal').classList.remove('active');
+}
+
+const categoryMap = {
+  'Зерновые': 'grain',
+  'Зернобобовые': 'grain',
+  'Технические': 'technical',
+  'Овощные': 'vegetable',
+  'Плодовые': 'fruit',
+  'Ягодные': 'berry',
+  'Кормовые': 'forage'
+};
+
+async function saveCulture() {
+  const id = document.getElementById('cultureId').value;
+  const categoryRu = document.getElementById('cultureCategory').value;
+  const data = {
+    name: document.getElementById('cultureName').value,
+    icon: document.getElementById('cultureIcon').value,
+    category: categoryMap[categoryRu] || 'grain'
+  };
+
+  if (!data.name) { showToast('Введите название', 'error'); return; }
+
+  try {
+    if (id) {
+      await admin.updateCulture(id, data);
+      showToast('Культура обновлена', 'success');
+    } else {
+      await admin.createCulture(data);
+      showToast('Культура добавлена', 'success');
+    }
+    closeCultureModal();
+    loadCultures();
+  } catch(e) {
+    showToast(e.message, 'error');
+  }
+}
+
+async function deleteCulture(id) {
+  if (!confirm('Удалить культуру? Это невозможно, если есть связанные сорта.')) return;
+  try {
+    await admin.deleteCulture(id);
+    showToast('Культура удалена', 'success');
+    loadCultures();
+  } catch(e) {
+    showToast(e.message, 'error');
+  }
+}
+
+updateNavAuth();
+loadUsers();
+</script>
+</body>
+</html>

@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Сорт — AgroSort</title>
+<link rel="stylesheet" href="/css/main.css">
+</head>
+<body>
+<nav class="navbar">
+  <div class="nav-inner">
+    <a href="/" class="logo">Agro<span>Sort</span></a>
+    <ul class="nav-links">
+      <li><a href="/pages/catalog.html">Каталог</a></li>
+      <li id="navAdminLink" style="display:none"><a href="/pages/admin.html">Администрирование</a></li>
+    </ul>
+    <div class="nav-auth" id="navAuth">
+      <a href="/pages/login.html" class="btn-nav-outline">Войти</a>
+      <a href="/pages/register.html" class="btn-nav">Регистрация</a>
+    </div>
+  </div>
+</nav>
+
+<div class="variety-wrap">
+  <div class="breadcrumb">
+    <a href="/">Главная</a><span>›</span>
+    <a href="/pages/catalog.html">Каталог</a><span>›</span>
+    <span id="breadName">Загрузка...</span>
+  </div>
+
+  <div id="content"><div class="loading">Загрузка данных о сорте...</div></div>
+</div>
+
+<script src="/js/api.js"></script>
+<script src="/js/auth.js"></script>
+<script>
+const user = getUser();
+(async () => {
+  updateNavAuth();
+  if (user?.role === 'admin') document.getElementById('navAdminLink').style.display = 'block';
+  const id = new URLSearchParams(window.location.search).get('id');
+  if (!id) { document.getElementById('content').innerHTML = '<div class="error-msg">ID сорта не указан</div>'; return; }
+
+  try {
+    const { data: v, isFavorite } = await api.get(`/varieties/${id}`);
+    document.title = `${v.name} — AgroSort`;
+    document.getElementById('breadName').textContent = v.name;
+
+    // Load offers
+    loadOffers(id);
+
+    const statusLabels = { active: 'Допущен', excluded: 'Исключён', pending: 'На рассмотрении' };
+    const catLabels = { grain:'Зерновые', vegetable:'Овощные', oilseed:'Масличные', fruit:'Плодовые', forage:'Кормовые', decorative:'Декоративные', technical:'Технические' };
+
+    const canEdit = user && (user.role === 'admin' || v.addedBy === user.id);
+    const adminActions = canEdit ? `
+      <div style="display:flex;gap:.5rem;margin-top:.5rem">
+        <a href="/pages/edit-variety.html?id=${v.id}" class="btn-outline" style="font-size:.8rem;padding:.4rem .8rem">✏️ Редактировать</a>
+        <button class="btn-outline" style="font-size:.8rem;padding:.4rem .8rem;color:#c84a3a;border-color:#c84a3a" onclick="deleteVariety(${v.id})">🗑️ Удалить</button>
+      </div>` : '';
+
+    document.getElementById('content').innerHTML = `
+    <div class="variety-layout">
+      <div class="variety-main">
+        ${v.image ? `<div class="variety-image"><img src="${v.image}" alt="${v.name}"></div>` : ''}
+        <div class="variety-header">
+          <div class="variety-culture-tag">
+            ${v.culture?.icon || '🌱'} ${v.culture?.name || 'Культура не указана'}
+            <span style="margin-left:.3rem;opacity:.6">·</span>
+            <span>${catLabels[v.culture?.category] || ''}</span>
+          </div>
+          <h1 class="variety-name">${v.name}</h1>
+          <div class="variety-reg">
+            ${v.registrationNumber ? `Рег. номер: <strong>${v.registrationNumber}</strong> · ` : ''}
+            Просмотров: ${v.viewCount}
+          </div>
+          <div class="variety-meta">
+            <div class="meta-item"><div class="meta-label">Год регистрации</div><div class="meta-value">${v.yearRegistered || '—'}</div></div>
+            <div class="meta-item"><div class="meta-label">Статус</div><div class="meta-value"><span class="status-badge status-${v.status}">${statusLabels[v.status]}</span></div></div>
+            <div class="meta-item"><div class="meta-label">Страна происхождения</div><div class="meta-value">${v.originCountry || 'Россия'}</div></div>
+            ${v.yearExcluded ? `<div class="meta-item"><div class="meta-label">Год исключения</div><div class="meta-value">${v.yearExcluded}</div></div>` : ''}
+          </div>
+          ${v.breeder ? `<div style="font-size:.85rem;color:var(--gray)"><strong style="color:var(--g)">Оригинатор:</strong> ${v.breeder}</div>` : ''}
+        </div>
+
+        ${v.description ? `
+        <div class="card-block">
+          <div class="card-block-title">Описание</div>
+          <p class="variety-desc">${v.description}</p>
+        </div>` : ''}
+
+        <div class="card-block">
+          <div class="card-block-title">Устойчивость и характеристики</div>
+          <div class="resist-grid">
+            <div class="resist-item">
+              <div class="r-label">Морозостойкость</div>
+              <div class="stars">${renderStars(v.frostResistance || 0)}</div>
+            </div>
+            <div class="resist-item">
+              <div class="r-label">Засухоустойчивость</div>
+              <div class="stars">${renderStars(v.droughtResistance || 0)}</div>
+            </div>
+            <div class="resist-item">
+              <div class="r-label">Устойчивость к болезням</div>
+              <div class="stars">${renderStars(v.diseaseResistance || 0)}</div>
+            </div>
+            ${v.vegetationDays ? `<div class="resist-item"><div class="r-label">Вегетационный период</div><div style="font-size:.95rem;font-weight:500;color:var(--g);margin-top:.3rem">${v.vegetationDays} дней</div></div>` : ''}
+          </div>
+        </div>
+
+        ${v.admittedRegions?.length ? `
+        <div class="card-block">
+          <div class="card-block-title">Регионы допуска</div>
+          <div class="regions-list">
+            ${v.admittedRegions.map(r => `<span class="region-tag">${r}</span>`).join('')}
+          </div>
+        </div>` : ''}
+
+        ${v.author ? `
+        <div class="card-block">
+          <div class="card-block-title">Добавлено в систему</div>
+          <div style="font-size:.85rem;color:var(--gray)">${v.author.name}${v.author.organization ? ` · ${v.author.organization}` : ''}</div>
+        </div>` : ''}
+
+        <div class="card-block where-buy" id="whereBuyBlock">
+          <div class="card-block-title">Где купить?</div>
+          <div class="loading" id="whereBuyLoading">Загрузка предложений...</div>
+        </div>
+      </div>
+
+      ${adminActions}
+      </div>
+
+      <div class="variety-sidebar">
+        <div class="sidebar-card">
+          <div class="card-block-title">Урожайность</div>
+          ${v.yieldMin && v.yieldMax ? `
+          <div class="yield-display">
+            <div class="yield-val">${v.yieldMin}–${v.yieldMax}</div>
+            <div class="yield-unit">${v.yieldUnit || 'т/га'}</div>
+          </div>` : '<div style="color:var(--gray);font-size:.85rem;text-align:center;padding:1rem">Нет данных</div>'}
+        </div>
+
+        <div class="sidebar-card">
+          <button class="btn-favorite ${isFavorite ? 'active' : ''}" id="favBtn" onclick="toggleFav(${v.id})">
+            ${isFavorite ? '★ В избранном' : '☆ В избранное'}
+          </button>
+          <a href="/pages/catalog.html" class="btn-catalog-back">← Вернуться в каталог</a>
+        </div>
+
+        <div class="sidebar-card">
+          <div class="card-block-title">Быстрые действия</div>
+          <div style="display:flex;flex-direction:column;gap:.5rem;margin-top:.5rem">
+            <a href="/pages/catalog.html?cultureId=${v.cultureId}" class="btn-outline" style="text-align:center;padding:.65rem;font-size:.82rem">Другие сорта культуры</a>
+          </div>
+        </div>
+      </div>
+    </div>`;
+  } catch(e) {
+    document.getElementById('content').innerHTML = `<div class="error-msg">Ошибка: ${e.message}</div>`;
+  }
+})();
+
+async function toggleFav(varietyId) {
+  if (!isLoggedIn()) { window.location.href = '/pages/login.html'; return; }
+  try {
+    const res = await api.post(`/favorites/${varietyId}`, {});
+    const btn = document.getElementById('favBtn');
+    btn.classList.toggle('active', res.favorited);
+    btn.textContent = res.favorited ? '★ В избранном' : '☆ В избранное';
+    showToast(res.message, 'success');
+  } catch(e) { showToast(e.message, 'error'); }
+}
+
+async function deleteVariety(varietyId) {
+  if (!confirm('Вы уверены, что хотите удалить этот сорт? Это действие необратимо.')) return;
+  try {
+    await api.delete(`/varieties/${varietyId}`);
+    showToast('Сорт удалён', 'success');
+    setTimeout(() => window.location.href = '/pages/catalog.html', 1000);
+  } catch(e) { showToast(e.message, 'error'); }
+}
+
+async function loadOffers(varietyId) {
+  try {
+    const { data } = await api.get(`/varieties/${varietyId}/offers`);
+    const container = document.getElementById('whereBuyBlock');
+    if (!data.length) {
+      container.innerHTML = `<div class="card-block-title">Где купить?</div><div class="where-buy-empty">Нет предложений</div>`;
+      return;
+    }
+    container.innerHTML = `<div class="card-block-title">Где купить?</div><div class="where-buy-list">` +
+      data.map(offer => `
+        <div class="where-buy-item">
+          <div class="wb-shop">${offer.shopName}</div>
+          <div class="wb-price">
+            <span class="wb-price-val">${offer.price.toLocaleString('ru-RU')} ₽</span>
+            <span class="wb-price-unit">${offer.unitLabel}</span>
+          </div>
+          <a href="${offer.url}" target="_blank" rel="noopener" class="wb-link">Купить →</a>
+        </div>
+      `).join('') + `</div>`;
+  } catch(e) {
+    document.getElementById('whereBuyBlock').innerHTML = '';
+  }
+}
+</script>
+</body>
+</html>

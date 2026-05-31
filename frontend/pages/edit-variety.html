@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Добавить сорт — AgroSort</title>
+<link rel="stylesheet" href="/css/main.css">
+<style>
+.form-section{background:#fff;border:1px solid #e0ddd4;border-radius:var(--radius);padding:1.8rem;margin-bottom:1.2rem}
+.form-section-title{font-size:.72rem;text-transform:uppercase;letter-spacing:.12em;color:var(--g3);font-weight:500;margin-bottom:1.2rem;padding-bottom:.8rem;border-bottom:1px solid #eee}
+.form-row-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem}
+.resist-row{display:grid;grid-template-columns:repeat(3,1fr);gap:1.5rem}
+.stars-input{display:flex;gap:5px;margin-top:.4rem}
+.star-btn{width:30px;height:30px;border:1.5px solid #ddd;background:#fff;border-radius:4px;cursor:pointer;font-size:16px;transition:all .15s;display:flex;align-items:center;justify-content:center;color:#ccc}
+.star-btn.active{background:var(--a);border-color:var(--a);color:#fff}
+.star-btn:hover{border-color:var(--a);color:var(--a)}
+.regions-checkboxes{display:grid;grid-template-columns:1fr 1fr;gap:.4rem;margin-top:.5rem}
+.region-check{display:flex;align-items:center;gap:.5rem;font-size:.82rem;color:var(--b);cursor:pointer}
+.region-check input{accent-color:var(--g3);width:14px;height:14px}
+.form-hint{font-size:.72rem;color:var(--gray);margin-top:.25rem}
+.submit-bar{display:flex;align-items:center;gap:1rem;background:#fff;border:1px solid #e0ddd4;border-radius:var(--radius);padding:1.2rem 1.8rem;position:sticky;bottom:1rem;box-shadow:0 4px 16px rgba(0,0,0,.1)}
+.offer-item{display:flex;align-items:center;gap:1rem;padding:.8rem;background:#fff;border:1px solid #ddd;border-radius:var(--radius);margin-bottom:.5rem}
+.offer-item:hover{border-color:var(--g3)}
+.offer-info{flex:1}
+.offer-shop{font-weight:500;color:var(--g);font-size:.9rem}
+.offer-price{font-size:.82rem;color:var(--gray);margin-top:.2rem}
+.offer-link{font-size:.75rem;color:var(--g3);text-decoration:underline;max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:block}
+.offer-actions{display:flex;gap:.5rem}
+.btn-del-offer{background:#fde8e8;color:#8a2020;border:none;padding:.4rem .7rem;border-radius:4px;font-size:.75rem;cursor:pointer}
+.btn-edit-offer{background:var(--g6);color:var(--g3);border:none;padding:.4rem .7rem;border-radius:4px;font-size:.75rem;cursor:pointer}
+</style>
+</head>
+<body>
+<nav class="navbar">
+  <div class="nav-inner">
+    <a href="/" class="logo">Agro<span>Sort</span></a>
+    <ul class="nav-links">
+      <li><a href="/pages/catalog.html">Каталог</a></li>
+      <li><a href="/pages/dashboard.html">Кабинет</a></li>
+    </ul>
+    <div class="nav-auth" id="navAuth"></div>
+  </div>
+</nav>
+
+<div class="form-page" style="max-width:860px">
+  <div class="breadcrumb">
+    <a href="/">Главная</a><span>›</span>
+    <a href="/pages/dashboard.html">Кабинет</a><span>›</span>
+    <span id="pageMode">Добавить сорт</span>
+  </div>
+  <div class="page-header">
+    <h1 class="page-title" id="pageTitle">Новый сорт</h1>
+    <p class="page-sub">Заполните характеристики сорта для добавления в реестр</p>
+  </div>
+
+  <div class="form-error" id="formError" style="margin-bottom:1rem"></div>
+  <div class="form-success" id="formSuccess" style="margin-bottom:1rem"></div>
+
+  <!-- Изображение -->
+  <div class="form-section">
+    <div class="form-section-title">Изображение</div>
+    <div style="display:flex;gap:1.5rem;align-items:flex-start;flex-wrap:wrap">
+      <div id="imagePreview" style="width:200px;height:150px;background:#f5f5f5;border-radius:var(--radius);display:flex;align-items:center;justify-content:center;overflow:hidden">
+        <span style="color:var(--gray);font-size:.8rem">Нет фото</span>
+      </div>
+      <div style="flex:1;min-width:200px">
+        <input type="file" id="fImage" accept="image/*" style="display:none" onchange="previewImage(this)">
+        <button type="button" class="btn-outline" onclick="document.getElementById('fImage').click()">Выбрать файл</button>
+        <div class="form-hint">JPG, PNG или WebP, макс. 5 МБ</div>
+        <div id="imageStatus" style="margin-top:.5rem;font-size:.82rem;color:var(--g3)"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Основное -->
+  <div class="form-section">
+    <div class="form-section-title">Основная информация</div>
+    <div class="form-row" style="margin-bottom:1rem">
+      <div class="form-group" style="flex:2">
+        <label class="form-label">Название сорта *</label>
+        <input class="form-input" id="fName" placeholder="Например: Московская 39">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Культура *</label>
+        <select class="form-select" id="fCulture">
+          <option value="">Выберите культуру</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Регистрационный номер</label>
+        <input class="form-input" id="fRegNum" placeholder="РСД-XXXXX">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Год регистрации</label>
+        <input class="form-input" type="number" id="fYear" placeholder="2020" min="1900" max="2025">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Статус</label>
+        <select class="form-select" id="fStatus">
+          <option value="active">Допущен к использованию</option>
+          <option value="pending">На рассмотрении</option>
+          <option value="excluded">Исключён из реестра</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Оригинатор / Селекционер</label>
+        <input class="form-input" id="fBreeder" placeholder="ФГБНУ, ВИР им. Вавилова...">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Страна происхождения</label>
+        <input class="form-input" id="fCountry" value="Россия">
+      </div>
+    </div>
+  </div>
+
+  <!-- Агрономия -->
+  <div class="form-section">
+    <div class="form-section-title">Агрономические характеристики</div>
+    <div class="form-row-3" style="margin-bottom:1rem">
+      <div class="form-group">
+        <label class="form-label">Урожайность от</label>
+        <input class="form-input" type="number" id="fYieldMin" placeholder="3.5" step="0.1">
+        <div class="form-hint">т/га (или единиц измерения)</div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Урожайность до</label>
+        <input class="form-input" type="number" id="fYieldMax" placeholder="7.0" step="0.1">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Единица измерения</label>
+        <select class="form-select" id="fYieldUnit">
+          <option value="т/га">т/га</option>
+          <option value="ц/га">ц/га</option>
+          <option value="кг/га">кг/га</option>
+          <option value="шт/га">шт/га</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group" style="max-width:250px;margin-bottom:1.2rem">
+      <label class="form-label">Вегетационный период (дней)</label>
+      <input class="form-input" type="number" id="fVegDays" placeholder="90" min="1" max="400">
+    </div>
+
+    <div class="resist-row">
+      <div>
+        <div class="form-label">Морозостойкость</div>
+        <div class="stars-input" id="frostStars" data-val="0"></div>
+        <div class="form-hint">1 — низкая, 5 — высокая</div>
+      </div>
+      <div>
+        <div class="form-label">Засухоустойчивость</div>
+        <div class="stars-input" id="droughtStars" data-val="0"></div>
+      </div>
+      <div>
+        <div class="form-label">Устойчивость к болезням</div>
+        <div class="stars-input" id="diseaseStars" data-val="0"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Регионы -->
+  <div class="form-section">
+    <div class="form-section-title">Регионы допуска</div>
+    <div class="regions-checkboxes" id="regionsContainer"></div>
+  </div>
+
+  <!-- Описание -->
+  <div class="form-section">
+    <div class="form-section-title">Описание</div>
+    <div class="form-group">
+      <label class="form-label">Описание сорта</label>
+      <textarea class="form-input" id="fDesc" rows="5" placeholder="Краткое описание агрономических особенностей, хозяйственных качеств, применения..." style="resize:vertical;line-height:1.6"></textarea>
+    </div>
+  </div>
+
+  <!-- Где купить -->
+  <!-- Где купить -->
+<div class="form-section" id="offersSection">
+  <div class="form-section-title">Где купить</div>
+
+  <div id="offersNotSaved" style="display:none;background:var(--g6);padding:.8rem 1rem;border-radius:var(--radius);margin-bottom:1rem;font-size:.82rem;color:var(--g2)">
+    ℹ️ Сохраните сорт, чтобы привязать предложения магазинов
+  </div>
+
+  <div class="form-hint" style="margin-bottom:1rem">Добавьте ссылки на интернет-магазины с семенами этого сорта</div>
+
+  <div id="offersList" style="margin-bottom:1rem"></div>
+
+  <div style="background:var(--g6);padding:1rem;border-radius:var(--radius);margin-bottom:1rem">
+    <div class="form-row" style="margin-bottom:.5rem">
+      <div class="form-group">
+        <label class="form-label">Название магазина</label>
+        <input class="form-input" id="offShop" placeholder="Например: АгроМаркет">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Цена</label>
+        <input class="form-input" type="number" id="offPrice" placeholder="2500" step="0.01">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Единица</label>
+        <select class="form-select" id="offUnit">
+          <option value="kg">кг</option>
+          <option value="packet">пакет</option>
+          <option value="seed_unit">пос.ед</option>
+          <option value="piece">шт</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group" style="margin-bottom:.5rem">
+      <label class="form-label">Ссылка на товар</label>
+      <input class="form-input" id="offUrl" placeholder="https://agromarket.example.ru/product/123">
+    </div>
+    <button class="btn-primary" onclick="addOffer()" style="font-size:.85rem;padding:.5rem 1rem">+ Добавить предложение</button>
+  </div>
+</div>
+</div>
+
+  <!-- Submit -->
+  <div class="submit-bar">
+    <button class="btn-primary" id="submitBtn" onclick="submitForm()">💾 Сохранить сорт</button>
+    <a href="/pages/dashboard.html" class="btn-outline">Отмена</a>
+    <span id="submitStatus" style="font-size:.82rem;color:var(--gray)"></span>
+  </div>
+</div>
+
+<script src="/js/api.js"></script>
+<script src="/js/auth.js"></script>
+<script>
+requireAuth();
+updateNavAuth();
+
+const regions = ['Брестская','Витебская','Гомельская','Гродненская','Могилёвская','Минская','Все области'];
+
+function initStars() {
+  ['frostStars','droughtStars','diseaseStars'].forEach(id => {
+    const container = document.getElementById(id);
+    container.innerHTML = [1,2,3,4,5].map(i =>
+      `<button class="star-btn" type="button" data-n="${i}" onclick="setStars('${id}',${i})">★</button>`
+    ).join('');
+  });
+}
+
+function initRegions() {
+  const container = document.getElementById('regionsContainer');
+  container.innerHTML = regions.map(r => `
+    <label class="region-check">
+      <input type="checkbox" value="${r}" name="region"> ${r}
+    </label>
+  `).join('');
+}
+
+initStars();
+initRegions();
+
+let currentImage = null;
+
+function previewImage(input) {
+  if (input.files && input.files[0]) {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      document.getElementById('imagePreview').innerHTML = '<img src="' + e.target.result + '" style="width:100%;height:100%;object-fit:cover">';
+      document.getElementById('imageStatus').textContent = 'Выбрано: ' + input.files[0].name;
+    };
+    reader.readAsDataURL(input.files[0]);
+  }
+}
+
+async function uploadImage(varietyId) {
+  const fileInput = document.getElementById('fImage');
+  if (!fileInput.files[0]) return;
+  const formData = new FormData();
+  formData.append('image', fileInput.files[0]);
+  try {
+    const res = await fetch('/api/varieties/' + varietyId + '/image', {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + localStorage.getItem('agrosort_token') },
+      body: formData
+    });
+    if (!res.ok) throw new Error('Ошибка загрузки');
+    document.getElementById('imageStatus').textContent = 'Загружено!';
+    return await res.json();
+  } catch(e) {
+    document.getElementById('imageStatus').textContent = 'Ошибка: ' + e.message;
+  }
+}
+
+let editId = new URLSearchParams(window.location.search).get('id') || null;
+if (editId) {
+  document.getElementById('pageMode').textContent = 'Редактировать сорт';
+  document.getElementById('pageTitle').textContent = 'Редактирование сорта';
+}
+
+function setStars(groupId, val) {
+  const group = document.getElementById(groupId);
+  group.dataset.val = val;
+  group.querySelectorAll('.star-btn').forEach(btn => {
+    btn.classList.toggle('active', parseInt(btn.dataset.n) <= val);
+  });
+}
+
+async function loadCultures() {
+  const res = await api.get('/cultures');
+  const sel = document.getElementById('fCulture');
+  sel.innerHTML = '<option value="">Выберите культуру</option>' +
+    res.data.map(c => `<option value="${c.id}">${c.icon||''} ${c.name}</option>`).join('');
+}
+
+async function loadForEdit() {
+  if (!editId) return;
+  try {
+    const { data: v } = await api.get(`/varieties/${editId}`);
+     console.log('данные сорта:', v); 
+    document.getElementById('fName').value = v.name || '';
+    document.getElementById('fCulture').value = v.cultureId || '';
+    document.getElementById('fRegNum').value = v.registrationNumber || '';
+    document.getElementById('fYear').value = v.yearRegistered || '';
+    document.getElementById('fStatus').value = v.status || 'active';
+    document.getElementById('fBreeder').value = v.breeder || '';
+    document.getElementById('fCountry').value = v.originCountry || 'Россия';
+    document.getElementById('fYieldMin').value = v.yieldMin || '';
+    document.getElementById('fYieldMax').value = v.yieldMax || '';
+    document.getElementById('fYieldUnit').value = v.yieldUnit || 'т/га';
+    document.getElementById('fVegDays').value = v.vegetationDays || '';
+    document.getElementById('fDesc').value = v.description || '';
+    if (v.frostResistance) setStars('frostStars', v.frostResistance);
+    if (v.droughtResistance) setStars('droughtStars', v.droughtResistance);
+    if (v.diseaseResistance) setStars('diseaseStars', v.diseaseResistance);
+    (v.admittedRegions||[]).forEach(r => {
+      const cb = document.querySelector(`input[value="${r}"]`);
+      if (cb) cb.checked = true;
+    });
+    if (v.image) {
+      currentImage = v.image;
+      document.getElementById('imagePreview').innerHTML = '<img src="' + v.image + '" style="width:100%;height:100%;object-fit:cover">';
+      document.getElementById('imageStatus').textContent = 'Текущее изображение';
+    }
+    document.getElementById('pageTitle').textContent = v.name;
+  } catch(e) { showToast(e.message, 'error'); }
+}
+
+async function submitForm() {
+  const err = document.getElementById('formError');
+  const succ = document.getElementById('formSuccess');
+  const btn = document.getElementById('submitBtn');
+  const status = document.getElementById('submitStatus');
+  err.style.display='none'; succ.style.display='none';
+
+  const name = document.getElementById('fName').value.trim();
+  const cultureId = document.getElementById('fCulture').value;
+  if (!name) { err.textContent='Укажите название сорта'; err.style.display='block'; return; }
+  if (!cultureId) { err.textContent='Выберите культуру'; err.style.display='block'; return; }
+
+  const regions = Array.from(document.querySelectorAll('input[name="region"]:checked')).map(cb => cb.value);
+  const body = {
+    name,
+    cultureId: parseInt(cultureId),
+    registrationNumber: document.getElementById('fRegNum').value.trim() || null,
+    yearRegistered: parseInt(document.getElementById('fYear').value) || null,
+    status: document.getElementById('fStatus').value,
+    breeder: document.getElementById('fBreeder').value.trim() || null,
+    originCountry: document.getElementById('fCountry').value.trim() || 'Россия',
+    yieldMin: parseFloat(document.getElementById('fYieldMin').value) || null,
+    yieldMax: parseFloat(document.getElementById('fYieldMax').value) || null,
+    yieldUnit: document.getElementById('fYieldUnit').value,
+    vegetationDays: parseInt(document.getElementById('fVegDays').value) || null,
+    frostResistance: parseInt(document.getElementById('frostStars').dataset.val) || null,
+    droughtResistance: parseInt(document.getElementById('droughtStars').dataset.val) || null,
+    diseaseResistance: parseInt(document.getElementById('diseaseStars').dataset.val) || null,
+    admittedRegions: regions,
+    description: document.getElementById('fDesc').value.trim() || null
+  };
+
+  btn.disabled = true; btn.textContent = '⏳ Сохраняем...'; status.textContent = '';
+  try {
+    let res;
+    if (editId) {
+      res = await api.put(`/varieties/${editId}`, body);
+      await uploadImage(editId);
+      succ.textContent = `✅ Сорт "${res.data.name}" успешно обновлён`;
+    } else {
+      res = await api.post('/varieties', body);
+      await uploadImage(res.data.id);
+      editId = res.data.id;
+      await loadOffers();
+      succ.textContent = `✅ Сорт "${res.data.name}" добавлен в реестр`;
+    }
+    succ.style.display = 'block';
+    showToast('Сохранено!', 'success');
+  } catch(e) {
+    err.textContent = e.message; err.style.display='block';
+    btn.disabled=false; btn.textContent='💾 Сохранить сорт';
+  }
+}
+
+(async () => {
+  await loadCultures();
+  await loadForEdit();
+  if (editId) {
+    await loadOffers();
+  }
+})();
+async function loadOffers() {
+  try {
+    const { data } = await api.get(`/varieties/${editId}/offers/all`);
+    renderOffers(data);
+  } catch(e) { console.error(e); }
+}
+
+function renderOffers(offers) {
+  const list = document.getElementById('offersList');
+  if (!offers.length) {
+    list.innerHTML = '<div style="color:var(--gray);font-size:.85rem;padding:.5rem 0">Пока нет предложений</div>';
+    return;
+  }
+  list.innerHTML = offers.map(o => `
+    <div class="offer-item" data-id="${o.id}">
+      <div class="offer-info">
+        <div class="offer-shop">${o.shopName}</div>
+        <div class="offer-price">${o.price.toLocaleString('ru-RU')} ₽ / ${o.unitLabel}</div>
+        <a href="${o.url}" target="_blank" class="offer-link">${o.url}</a>
+      </div>
+      <div class="offer-actions">
+        <button class="btn-edit-offer" onclick="editOffer(${o.id}, '${o.shopName}', ${o.price}, '${o.unit}', '${o.url}')">✏️</button>
+        <button class="btn-del-offer" onclick="deleteOffer(${o.id})">🗑️</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+async function addOffer() {
+  if (!editId) { showToast('Сначала сохраните сорт', 'error'); return; }
+  const shop = document.getElementById('offShop').value.trim();
+  const price = parseFloat(document.getElementById('offPrice').value);
+  const unit = document.getElementById('offUnit').value;
+  const url = document.getElementById('offUrl').value.trim();
+
+  if (!shop || !price || !url) { showToast('Заполните все поля', 'error'); return; }
+
+  try {
+    const body = { shopName: shop, price, unit, url };
+    if (window.currentOfferId) {
+      await api.put(`/offers/${window.currentOfferId}`, body);
+      window.currentOfferId = null;
+      showToast('Предложение обновлено', 'success');
+    } else {
+      await api.post(`/varieties/${editId}/offers`, body);
+      showToast('Предложение добавлено', 'success');
+    }
+    document.getElementById('offShop').value = '';
+    document.getElementById('offPrice').value = '';
+    document.getElementById('offUrl').value = '';
+    await loadOffers();
+  } catch(e) { showToast(e.message, 'error'); }
+}
+
+async function deleteOffer(id) {
+  if (!confirm('Удалить это предложение?')) return;
+  try {
+    await api.delete(`/offers/${id}`);
+    showToast('Удалено', 'success');
+    await loadOffers();
+  } catch(e) { showToast(e.message, 'error'); }
+}
+
+function editOffer(id, shop, price, unit, url) {
+  document.getElementById('offShop').value = shop;
+  document.getElementById('offPrice').value = price;
+  document.getElementById('offUnit').value = unit;
+  document.getElementById('offUrl').value = url;
+  window.currentOfferId = id;
+  showToast('Редактируйте поля и нажмите "Добавить" для сохранения', 'success');
+}
+</script>
+</body>
+</html>

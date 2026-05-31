@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AgroSort — Реестр сортов сельскохозяйственных культур</title>
+<link rel="stylesheet" href="/css/main.css">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+<nav class="navbar" id="navbar">
+  <div class="nav-inner">
+    <a href="/" class="logo">Agro<span>Sort</span></a>
+    <ul class="nav-links">
+      <li><a href="/pages/catalog.html">Каталог</a></li>
+      <li><a href="/pages/catalog.html?category=grain">Зерновые</a></li>
+      <li><a href="/pages/catalog.html?category=vegetable">Овощные</a></li>
+      <li><a href="#about">О портале</a></li>
+    </ul>
+    <div class="nav-auth" id="navAuth">
+      <a href="/pages/login.html" class="btn-nav-outline">Войти</a>
+      <a href="/pages/register.html" class="btn-nav">Регистрация</a>
+    </div>
+  </div>
+</nav>
+
+<section class="hero">
+  <div class="hero-left">
+    <span class="hero-tag">Государственный реестр · Официальные данные</span>
+    <h1 class="hero-title">Учёт сортов<br>сельхоз<span class="accent">культур</span><br>онлайн</h1>
+    <p class="hero-desc">Единый портал для агрономов, селекционеров и аграрных предприятий. Актуальные данные о зарегистрированных сортах, допусках и агрономических характеристиках.</p>
+    <div class="hero-actions">
+      <a href="/pages/catalog.html" class="btn-primary">Открыть каталог</a>
+      <a href="#features" class="btn-outline">Как это работает</a>
+    </div>
+    <div class="hero-stats" id="heroStats">
+      <div><div class="stat-n" id="statTotal">—</div><div class="stat-l">Сортов в реестре</div></div>
+      <div><div class="stat-n" id="statActive">—</div><div class="stat-l">Допущены к использованию</div></div>
+      <div><div class="stat-n" id="statYear">2024</div><div class="stat-l">Год обновления</div></div>
+    </div>
+  </div>
+  <div class="hero-right">
+    <div class="catalog-preview" id="catalogPreview">
+      <div class="cp-header">
+        <span class="cp-title">Последние добавления</span>
+        <span class="cp-badge" id="cpBadge">загрузка...</span>
+      </div>
+      <div id="previewList"><div class="loading-rows"></div></div>
+    </div>
+  </div>
+</section>
+
+<section class="features" id="features">
+  <div class="section-inner">
+    <p class="section-label">Возможности портала</p>
+    <h2 class="section-title">Всё что нужно агроному<br>в одном месте</h2>
+    <div class="features-grid">
+      <div class="feat"><div class="feat-accent"></div><div class="feat-num">01</div><div class="feat-title">Поиск и фильтрация</div><p class="feat-text">Быстрый поиск по сортам с фильтрами по культуре, области допуска, году регистрации и хозяйственным признакам.</p></div>
+      <div class="feat"><div class="feat-accent"></div><div class="feat-num">02</div><div class="feat-title">Карточки сортов</div><p class="feat-text">Детальные агрономические характеристики: урожайность, устойчивость к болезням, сроки вегетации, рекомендуемые области.</p></div>
+      <div class="feat"><div class="feat-accent"></div><div class="feat-num">03</div><div class="feat-title">Экспорт данных</div><p class="feat-text">Выгрузка выборок в Excel и PDF. Формирование отчётов для хозяйства или государственной отчётности.</p></div>
+      <div class="feat"><div class="feat-accent"></div><div class="feat-num">04</div><div class="feat-title">Личный кабинет</div><p class="feat-text">Сохранение избранных сортов, управление подборками, уведомления об изменениях в реестре.</p></div>
+      <div class="feat"><div class="feat-accent"></div><div class="feat-num">05</div><div class="feat-title">REST API</div><p class="feat-text">Интеграция с агроменеджмент системами, ERP хозяйств и мобильными приложениями через открытый API.</p></div>
+      <div class="feat"><div class="feat-accent"></div><div class="feat-num">06</div><div class="feat-title">Актуальность данных</div><p class="feat-text">Синхронизация с Государственным реестром селекционных достижений при каждом приказе Министерства сельского хозяйства.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="cultures-section">
+  <div class="section-inner">
+    <p class="section-label">Категории культур</p>
+    <h2 class="section-title" style="color:#fff">Охватываем все<br>основные группы</h2>
+    <div class="cultures-grid" id="culturesGrid">
+      <div class="culture-skeleton"></div>
+      <div class="culture-skeleton"></div>
+      <div class="culture-skeleton"></div>
+      <div class="culture-skeleton"></div>
+      <div class="culture-skeleton"></div>
+      <div class="culture-skeleton"></div>
+    </div>
+  </div>
+</section>
+
+<section class="cta-section" id="about">
+  <div class="cta-inner">
+    <div>
+      <h2 class="cta-title">Начните работу<br>с реестром сегодня</h2>
+      <p class="cta-sub">Бесплатный доступ для агрономов и фермерских хозяйств</p>
+    </div>
+    <div class="cta-btns">
+      <a href="/pages/register.html" class="btn-dark">Зарегистрироваться</a>
+      <a href="/pages/catalog.html" class="btn-clear">Просмотр каталога</a>
+    </div>
+  </div>
+</section>
+
+<footer class="footer">
+  <div class="footer-inner">
+    <div>
+      <div class="f-brand">Agro<span>Sort</span></div>
+      <p class="f-desc">Интернет-портал учёта сортов сельскохозяйственных культур.</p>
+    </div>
+    <div>
+      <div class="f-title">Каталог</div>
+      <ul class="f-links">
+        <li><a href="/pages/catalog.html">Поиск сортов</a></li>
+        <li><a href="/pages/catalog.html?category=grain">Зерновые</a></li>
+        <li><a href="/pages/catalog.html?category=vegetable">Овощные</a></li>
+        <li><a href="/pages/catalog.html?category=oilseed">Масличные</a></li>
+      </ul>
+    </div>
+    <div>
+      <div class="f-title">Аккаунт</div>
+      <ul class="f-links">
+        <li><a href="/pages/login.html">Войти</a></li>
+        <li><a href="/pages/register.html">Регистрация</a></li>
+        <li><a href="/pages/dashboard.html">Личный кабинет</a></li>
+      </ul>
+    </div>
+    <div>
+      <div class="f-title">API</div>
+      <ul class="f-links">
+        <li><a href="/api/health">Статус API</a></li>
+        <li><a href="/api/varieties">GET /varieties</a></li>
+        <li><a href="/api/cultures">GET /cultures</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-copy">© 2024 AgroSort · Государственный реестр селекционных достижений</div>
+</footer>
+
+<script src="/js/api.js"></script>
+<script src="/js/auth.js"></script>
+<script>
+(async () => {
+  updateNavAuth();
+  try {
+    const stats = await api.get('/varieties/stats');
+    document.getElementById('statTotal').textContent = stats.total?.toLocaleString('ru') || '—';
+    document.getElementById('statActive').textContent = stats.active?.toLocaleString('ru') || '—';
+  } catch(e) {}
+
+  try {
+    const res = await api.get('/varieties?limit=6&sortBy=createdAt&sortDir=DESC');
+    const list = document.getElementById('previewList');
+    document.getElementById('cpBadge').textContent = `${res.pagination.total} записей`;
+    list.innerHTML = res.data.map(v => `
+      <a href="/pages/variety.html?id=${v.id}" class="preview-row">
+        <div>
+          <div class="preview-name">${v.name}</div>
+          <div class="preview-sci">${v.culture?.name || ''}</div>
+        </div>
+        <div class="preview-year">${v.yearRegistered || '—'}</div>
+        <div class="dot ${v.status === 'active' ? 'green' : 'red'}"></div>
+      </a>`).join('');
+  } catch(e) {
+    document.getElementById('previewList').innerHTML = '<p style="color:#888;padding:1rem;font-size:.85rem">Не удалось подключиться к серверу</p>';
+  }
+
+  try {
+    const cultures = await api.get('/cultures');
+    const grid = document.getElementById('culturesGrid');
+    const catNames = { grain:'Зерновые', vegetable:'Овощные', oilseed:'Масличные', fruit:'Плодовые', forage:'Кормовые', decorative:'Декоративные', technical:'Технические', berry:'Ягодные' };
+    grid.innerHTML = cultures.data.map(c => `
+      <a href="/pages/catalog.html?cultureId=${c.id}" class="culture-card">
+        <span class="c-icon">${c.icon || '🌱'}</span>
+        <div class="c-name">${c.name}</div>
+        <div class="c-count">${(c.dataValues?.varietyCount || c.varietyCount || 0)} сортов</div>
+        <span class="c-arrow">→</span>
+      </a>`).join('');
+  } catch(e) {}
+})();
+</script>
+</body>
+</html>

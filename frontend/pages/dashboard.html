@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Личный кабинет — AgroSort</title>
+<link rel="stylesheet" href="/css/main.css">
+<style>
+.dash-nav-label{font-size:.65rem;text-transform:uppercase;letter-spacing:.1em;color:var(--g3);padding:.5rem .9rem .2rem;margin-top:.5rem}
+.dash-user-block{background:var(--g2);border-radius:var(--radius);padding:1rem;margin-bottom:1.5rem;display:flex;align-items:center;gap:.8rem}
+.dash-user-avatar{width:40px;height:40px;border-radius:50%;background:var(--g3);color:var(--g5);display:flex;align-items:center;justify-content:center;font-size:.9rem;font-weight:600;flex-shrink:0}
+.dash-user-name{font-size:.88rem;font-weight:500;color:var(--w)}
+.dash-user-role{font-size:.72rem;color:var(--g4);margin-top:.1rem}
+.tab-btns{display:flex;gap:2px;background:var(--g6);border-radius:var(--radius);padding:2px;margin-bottom:1.5rem}
+.tab-btn{flex:1;padding:.6rem 1rem;border:none;background:transparent;font-family:inherit;font-size:.82rem;cursor:pointer;border-radius:4px;transition:all .2s;color:var(--g2);font-weight:500}
+.tab-btn.active{background:#fff;color:var(--g);box-shadow:0 1px 4px rgba(0,0,0,.1)}
+.tab-content{display:none}
+.tab-content.active{display:block}
+.fav-card{display:flex;align-items:center;gap:1rem;padding:1rem;background:#fff;border:1px solid #e0ddd4;border-radius:var(--radius);margin-bottom:.6rem;transition:all .2s}
+.fav-card:hover{border-color:var(--g3);box-shadow:0 2px 8px rgba(0,0,0,.06)}
+.fav-icon{width:40px;height:40px;background:var(--g6);border-radius:var(--radius);display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0}
+.fav-info{flex:1}
+.fav-name{font-size:.92rem;font-weight:500;color:var(--b)}
+.fav-meta{font-size:.75rem;color:var(--gray);margin-top:.15rem}
+.fav-actions{display:flex;gap:.5rem}
+.btn-sm{padding:.4rem .8rem;border-radius:var(--radius);font-family:inherit;font-size:.75rem;cursor:pointer;transition:all .2s;font-weight:500;border:1px solid #ddd;background:#fff;color:var(--g2)}
+.btn-sm:hover{background:var(--g6);border-color:var(--g3)}
+.btn-sm.danger:hover{background:#fde8e8;border-color:#c84a3a;color:#c84a3a}
+.my-variety-row{display:grid;grid-template-columns:2fr 1.2fr 1fr auto;gap:1rem;align-items:center;padding:.85rem 1rem;background:#fff;border:1px solid #e0ddd4;border-radius:var(--radius);margin-bottom:.5rem;transition:all .2s}
+.my-variety-row:hover{border-color:var(--g3)}
+.profile-form{background:#fff;border:1px solid #e0ddd4;border-radius:var(--radius);padding:1.5rem;max-width:500px}
+.activity-item{display:flex;gap:1rem;align-items:flex-start;padding:.8rem 0;border-bottom:1px solid #eee}
+.activity-item:last-child{border-bottom:none}
+.activity-dot{width:8px;height:8px;border-radius:50%;background:var(--g4);margin-top:.4rem;flex-shrink:0}
+.activity-text{font-size:.83rem;color:var(--b)}
+.activity-time{font-size:.72rem;color:var(--gray);margin-top:.15rem}
+.quick-actions{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin-bottom:2rem}
+.qa-card{background:#fff;border:1px solid #e0ddd4;border-radius:var(--radius);padding:1.2rem;text-align:center;cursor:pointer;transition:all .2s;text-decoration:none;color:var(--b)}
+.qa-card:hover{border-color:var(--g3);transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,0,0,.08)}
+.qa-icon{font-size:1.6rem;margin-bottom:.5rem}
+.qa-label{font-size:.82rem;font-weight:500;color:var(--g)}
+.qa-sub{font-size:.72rem;color:var(--gray);margin-top:.2rem}
+</style>
+</head>
+<body>
+<nav class="navbar">
+  <div class="nav-inner">
+    <a href="/" class="logo">Agro<span>Sort</span></a>
+    <ul class="nav-links">
+      <li><a href="/pages/catalog.html">Каталог</a></li>
+      <li><a href="/pages/dashboard.html" class="active">Кабинет</a></li>
+    </ul>
+    <div class="nav-auth" id="navAuth"></div>
+  </div>
+</nav>
+
+<div class="dash-layout">
+  <!-- Sidebar -->
+  <aside class="dash-sidebar">
+    <div class="dash-user-block" id="sidebarUser"></div>
+    <div class="dash-nav-label">Навигация</div>
+    <ul class="dash-nav">
+      <li><a href="#" class="active" onclick="switchTab('overview',this)">📊 Обзор</a></li>
+      <li><a href="#" onclick="switchTab('favorites',this)">★ Избранное</a></li>
+      <li><a href="#" onclick="switchTab('myVarieties',this)">🌾 Мои сорта</a></li>
+      <li><a href="#" onclick="switchTab('profile',this)">👤 Профиль</a></li>
+    </ul>
+    <div class="dash-nav-label" id="adminNavLabel" style="display:none">Администрирование</div>
+    <ul class="dash-nav" id="adminNav" style="display:none">
+      <li><a href="/pages/admin.html" onclick="switchTab('admin',this)">⚙️ Управление</a></li>
+      <li><a href="/pages/add-variety.html">➕ Добавить сорт</a></li>
+    </ul>
+  </aside>
+
+  <!-- Content -->
+  <main class="dash-content">
+
+    <!-- OVERVIEW TAB -->
+    <div class="tab-content active" id="tab-overview">
+      <div class="dash-header">
+        <h1 class="dash-title" id="greetingTitle">Добро пожаловать</h1>
+        <p class="dash-greeting" id="greetingSub">Загрузка...</p>
+      </div>
+
+      <div class="stats-row" id="statsRow">
+        <div class="stat-card"><div class="sc-label">Избранных сортов</div><div class="sc-val" id="scFav">—</div></div>
+        <div class="stat-card"><div class="sc-label">Добавлено мной</div><div class="sc-val" id="scMy">—</div></div>
+        <div class="stat-card"><div class="sc-label">Всего в реестре</div><div class="sc-val" id="scTotal">—</div></div>
+        <div class="stat-card"><div class="sc-label">Активных сортов</div><div class="sc-val" id="scActive">—</div></div>
+      </div>
+
+      <div class="quick-actions">
+        <a href="/pages/catalog.html" class="qa-card"><div class="qa-icon">🔍</div><div class="qa-label">Поиск сортов</div><div class="qa-sub">Перейти в каталог</div></a>
+        <a href="/pages/add-variety.html" class="qa-card" id="qaAdd"><div class="qa-icon">➕</div><div class="qa-label">Добавить сорт</div><div class="qa-sub">Новая запись</div></a>
+        <a href="#" class="qa-card" onclick="switchTab('favorites',null)"><div class="qa-icon">★</div><div class="qa-label">Избранное</div><div class="qa-sub">Мои подборки</div></a>
+      </div>
+
+      <div class="card-block">
+        <div class="dash-section-title">
+          <span>Недавно просмотренные</span>
+          <a href="/pages/catalog.html">Весь каталог →</a>
+        </div>
+        <div id="recentVarieties"><div class="loading">Загрузка...</div></div>
+      </div>
+    </div>
+
+    <!-- FAVORITES TAB -->
+    <div class="tab-content" id="tab-favorites">
+      <div class="dash-header">
+        <h1 class="dash-title">Избранные сорты</h1>
+        <p class="dash-greeting">Ваша личная коллекция сортов</p>
+      </div>
+      <div id="favoritesContent"><div class="loading">Загрузка...</div></div>
+    </div>
+
+    <!-- MY VARIETIES TAB -->
+    <div class="tab-content" id="tab-myVarieties">
+      <div class="dash-header" style="display:flex;align-items:center;justify-content:space-between">
+        <div>
+          <h1 class="dash-title">Мои сорта</h1>
+          <p class="dash-greeting">Сорта, добавленные вами в систему</p>
+        </div>
+        <a href="/pages/add-variety.html" class="btn-primary" style="white-space:nowrap">+ Добавить сорт</a>
+      </div>
+      <div id="myVarietiesContent"><div class="loading">Загрузка...</div></div>
+    </div>
+
+    <!-- PROFILE TAB -->
+    <div class="tab-content" id="tab-profile">
+      <div class="dash-header">
+        <h1 class="dash-title">Профиль</h1>
+        <p class="dash-greeting">Личные данные и настройки аккаунта</p>
+      </div>
+      <div class="profile-form">
+        <div class="form-error" id="profileError"></div>
+        <div class="form-success" id="profileSuccess"></div>
+        <div class="form-group">
+          <label class="form-label">ФИО</label>
+          <input class="form-input" id="pName">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Email</label>
+          <input class="form-input" id="pEmail" disabled style="opacity:.6">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Роль</label>
+          <input class="form-input" id="pRole" disabled style="opacity:.6">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Организация</label>
+          <input class="form-input" id="pOrg" placeholder="Название хозяйства или организации">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Область</label>
+          <select class="form-select" id="pRegion">
+            <option value="">Не указана</option>
+            <option>Брестская</option>
+            <option>Витебская</option>
+            <option>Гомельская</option>
+            <option>Гродненская</option>
+            <option>Могилёвская</option>
+            <option>Минская</option>
+          </select>
+        </div>
+        <button class="btn-submit" onclick="saveProfile()" style="width:auto;padding:.75rem 2rem">Сохранить изменения</button>
+        <hr style="margin:1.5rem 0;border:none;border-top:1px solid #eee">
+        <button class="btn-reset" onclick="logout()" style="color:#c84a3a;border-color:#c84a3a;width:auto;padding:.6rem 1.5rem">Выйти из аккаунта</button>
+      </div>
+    </div>
+
+    <!-- ADMIN TAB -->
+    <div class="tab-content" id="tab-admin">
+      <div class="dash-header">
+        <h1 class="dash-title">Администрирование</h1>
+        <p class="dash-greeting">Управление данными портала</p>
+      </div>
+      <div class="stats-row" id="adminStats" style="grid-template-columns:repeat(3,1fr)">
+        <div class="stat-card"><div class="sc-label">Всего сортов</div><div class="sc-val" id="asTotal">—</div></div>
+        <div class="stat-card"><div class="sc-label">Активных</div><div class="sc-val" id="asActive">—</div><div class="sc-sub" style="color:var(--g3)">допущены к использованию</div></div>
+        <div class="stat-card"><div class="sc-label">Исключённых</div><div class="sc-val" id="asExcluded">—</div></div>
+      </div>
+      <div class="card-block" style="margin-top:1.5rem">
+        <div class="dash-section-title"><span>Популярные сорта</span></div>
+        <div id="topVarieties"><div class="loading">Загрузка...</div></div>
+      </div>
+      <div class="card-block" style="margin-top:1rem">
+        <div class="dash-section-title"><span>Управление культурами</span><a href="#" onclick="loadCulturesAdmin()">Обновить</a></div>
+        <div id="culturesAdmin"><div class="loading">Загрузка...</div></div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script src="/js/api.js"></script>
+<script src="/js/auth.js"></script>
+<script>
+requireAuth();
+const user = getUser();
+let allFavorites = [];
+let allMyVarieties = [];
+
+function switchTab(name, el) {
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.dash-nav a').forEach(a => a.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  if (el) el.classList.add('active');
+  if (name === 'favorites') loadFavorites();
+  if (name === 'myVarieties') loadMyVarieties();
+  if (name === 'admin') loadAdminData();
+  return false;
+}
+
+async function init() {
+  updateNavAuth();
+  if (!user) { window.location.href='/pages/login.html'; return; }
+
+  // Sidebar
+  const initials = user.name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+  const roleLabels = { admin:'Администратор', agronomist:'Агроном', viewer:'Наблюдатель' };
+  document.getElementById('sidebarUser').innerHTML = `
+    <div class="dash-user-avatar">${initials}</div>
+    <div><div class="dash-user-name">${user.name}</div><div class="dash-user-role">${roleLabels[user.role] || user.role}</div></div>`;
+
+  document.getElementById('greetingTitle').textContent = `Добро пожаловать, ${user.name.split(' ')[0]}!`;
+  document.getElementById('greetingSub').textContent = user.organization || 'Добро пожаловать в AgroSort';
+
+  // Profile form
+  document.getElementById('pName').value = user.name;
+  document.getElementById('pEmail').value = user.email;
+  document.getElementById('pRole').value = roleLabels[user.role] || user.role;
+  document.getElementById('pOrg').value = user.organization || '';
+  if (user.region) document.getElementById('pRegion').value = user.region;
+
+  // Admin nav
+  if (user.role === 'admin' || user.role === 'agronomist') {
+    document.getElementById('adminNavLabel').style.display = 'block';
+    document.getElementById('adminNav').style.display = 'block';
+  }
+
+  // Stats
+  try {
+    const [stats, favs, myV] = await Promise.all([
+      api.get('/varieties/stats'),
+      api.get('/favorites'),
+      api.get('/varieties?limit=100')
+    ]);
+    document.getElementById('scFav').textContent = favs.data.length;
+    document.getElementById('scTotal').textContent = stats.total?.toLocaleString('ru');
+    document.getElementById('scActive').textContent = stats.active?.toLocaleString('ru');
+    const mine = (myV.data || []).filter(v => v.author?.id === user.id || v.addedBy === user.id);
+    document.getElementById('scMy').textContent = mine.length;
+    allFavorites = favs.data;
+    allMyVarieties = mine;
+  } catch(e) {}
+
+  // Recent varieties (top viewed)
+  try {
+    const res = await api.get('/varieties?sortBy=viewCount&sortDir=DESC&limit=5');
+    document.getElementById('recentVarieties').innerHTML = res.data.map(v => `
+      <div class="my-variety-row" style="cursor:pointer" onclick="location.href='/pages/variety.html?id=${v.id}'">
+        <div><div class="row-name">${v.name}</div><div class="row-sci">${v.culture?.icon||''} ${v.culture?.name||''}</div></div>
+        <div style="font-size:.8rem;color:var(--gray)">${v.yearRegistered||'—'}</div>
+        <div><span class="status-badge status-${v.status}">${v.status==='active'?'Допущен':'Исключён'}</span></div>
+        <div style="font-size:.75rem;color:var(--gray)">${v.viewCount} просмотров</div>
+      </div>`).join('');
+  } catch(e) {}
+}
+
+async function loadFavorites() {
+  const el = document.getElementById('favoritesContent');
+  try {
+    const res = await api.get('/favorites');
+    if (!res.data.length) { el.innerHTML = '<div class="empty-state">⭐ У вас пока нет избранных сортов.<br><a href="/pages/catalog.html" style="color:var(--g3)">Перейти в каталог</a></div>'; return; }
+    el.innerHTML = res.data.map(f => `
+      <div class="fav-card">
+        <div class="fav-icon">${f.variety?.culture?.icon || '🌱'}</div>
+        <div class="fav-info">
+          <div class="fav-name">${f.variety?.name || '—'}</div>
+          <div class="fav-meta">${f.variety?.culture?.name || ''} · ${f.variety?.yearRegistered || ''} · <span class="status-badge status-${f.variety?.status}" style="font-size:.65rem">${f.variety?.status==='active'?'Допущен':'Исключён'}</span></div>
+        </div>
+        <div class="fav-actions">
+          <button class="btn-sm" onclick="location.href='/pages/variety.html?id=${f.variety?.id}'">Открыть</button>
+          <button class="btn-sm danger" onclick="removeFav(${f.variety?.id}, this)">✕</button>
+        </div>
+      </div>`).join('');
+  } catch(e) { el.innerHTML = `<div class="error-msg">${e.message}</div>`; }
+}
+
+async function removeFav(varietyId, btn) {
+  try {
+    await api.post(`/favorites/${varietyId}`, {});
+    btn.closest('.fav-card').remove();
+    showToast('Удалено из избранного');
+    const sc = document.getElementById('scFav');
+    sc.textContent = Math.max(0, parseInt(sc.textContent) - 1);
+  } catch(e) { showToast(e.message, 'error'); }
+}
+
+async function loadMyVarieties() {
+  const el = document.getElementById('myVarietiesContent');
+  try {
+    const res = await api.get('/varieties?limit=50&sortBy=createdAt&sortDir=DESC');
+    const mine = res.data.filter(v => v.author?.id === user.id || v.addedBy === user.id);
+    if (!mine.length) {
+      el.innerHTML = '<div class="empty-state">🌾 Вы ещё не добавили ни одного сорта.<br><a href="/pages/add-variety.html" style="color:var(--g3)">Добавить первый сорт</a></div>';
+      return;
+    }
+    el.innerHTML = `
+      <div style="background:#fff;border:1px solid #e0ddd4;border-radius:var(--radius);overflow:hidden">
+        <div style="display:grid;grid-template-columns:2fr 1.2fr 1fr auto;gap:1rem;padding:.6rem 1rem;background:var(--g6);font-size:.7rem;font-weight:500;text-transform:uppercase;letter-spacing:.07em;color:var(--g3)">
+          <span>Сорт</span><span>Культура</span><span>Статус</span><span>Действия</span>
+        </div>
+        ${mine.map(v => `
+        <div class="my-variety-row">
+          <div><div class="row-name">${v.name}</div><div class="row-sci">${v.yearRegistered||'—'}</div></div>
+          <div style="font-size:.82rem;color:var(--g2)">${v.culture?.icon||''} ${v.culture?.name||'—'}</div>
+          <div><span class="status-badge status-${v.status}">${v.status==='excluded'?'Исключён':'На рассмотрении'}</span></div>
+          <div style="display:flex;gap:.4rem">
+            <button class="btn-sm" onclick="location.href='/pages/variety.html?id=${v.id}'">Просмотр</button>
+            <button class="btn-sm" onclick="location.href='/pages/edit-variety.html?id=${v.id}'">Ред.</button>
+          </div>
+        </div>`).join('')}
+      </div>`;
+  } catch(e) { el.innerHTML = `<div class="error-msg">${e.message}</div>`; }
+}
+
+async function loadAdminData() {
+  try {
+    const stats = await api.get('/varieties/stats');
+    document.getElementById('asTotal').textContent = stats.total;
+    document.getElementById('asActive').textContent = stats.active;
+    document.getElementById('asExcluded').textContent = stats.excluded;
+    document.getElementById('topVarieties').innerHTML = (stats.topViewed||[]).map((v,i) => `
+      <div class="my-variety-row" style="cursor:pointer" onclick="location.href='/pages/variety.html?id=${v.id}'">
+        <div><span style="color:var(--a);font-weight:700;margin-right:.5rem">#${i+1}</span><span class="row-name">${v.name}</span></div>
+        <div style="font-size:.8rem;color:var(--gray)">${v.culture?.icon||''} ${v.culture?.name||''}</div>
+        <div style="font-size:.8rem;color:var(--gray)">${v.viewCount} просмотров</div>
+      </div>`).join('');
+  } catch(e) {}
+  await loadCulturesAdmin();
+}
+
+async function loadCulturesAdmin() {
+  try {
+    const res = await api.get('/cultures');
+    document.getElementById('culturesAdmin').innerHTML = `
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem">
+        ${res.data.map(c => `
+        <div style="background:#f9f7f2;border:1px solid #e0ddd4;border-radius:var(--radius);padding:.8rem;display:flex;align-items:center;gap:.6rem">
+          <span style="font-size:1.2rem">${c.icon||'🌱'}</span>
+          <div>
+            <div style="font-size:.85rem;font-weight:500">${c.name}</div>
+            <div style="font-size:.72rem;color:var(--gray)">${c.dataValues?.varietyCount||0} сортов</div>
+          </div>
+        </div>`).join('')}
+      </div>`;
+  } catch(e) {}
+}
+
+async function saveProfile() {
+  const err = document.getElementById('profileError');
+  const succ = document.getElementById('profileSuccess');
+  err.style.display='none'; succ.style.display='none';
+  try {
+    const res = await api.put('/auth/profile', {
+      name: document.getElementById('pName').value,
+      organization: document.getElementById('pOrg').value,
+      region: document.getElementById('pRegion').value
+    });
+    const updated = { ...user, ...res.user };
+    localStorage.setItem('agrosort_user', JSON.stringify(updated));
+    succ.textContent = 'Профиль успешно обновлён';
+    succ.style.display = 'block';
+    showToast('Профиль сохранён', 'success');
+  } catch(e) { err.textContent = e.message; err.style.display='block'; }
+}
+
+init();
+</script>
+</body>
+</html>

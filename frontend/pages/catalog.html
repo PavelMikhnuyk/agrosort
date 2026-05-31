@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Каталог сортов — AgroSort</title>
+<link rel="stylesheet" href="/css/main.css">
+</head>
+<body>
+<nav class="navbar">
+  <div class="nav-inner">
+    <a href="/" class="logo">Agro<span>Sort</span></a>
+    <ul class="nav-links">
+      <li><a href="/pages/catalog.html" class="active">Каталог</a></li>
+      <li><a href="/pages/catalog.html?category=grain">Зерновые</a></li>
+      <li><a href="/pages/catalog.html?category=vegetable">Овощные</a></li>
+      <li><a href="/#about">О портале</a></li>
+    </ul>
+    <div class="nav-auth" id="navAuth">
+      <a href="/pages/login.html" class="btn-nav-outline">Войти</a>
+      <a href="/pages/register.html" class="btn-nav">Регистрация</a>
+    </div>
+  </div>
+</nav>
+
+<div class="page-wrap">
+  <div class="page-header">
+    <h1 class="page-title">Каталог сортов</h1>
+    <p class="page-sub" id="pageSubtitle">Загрузка...</p>
+  </div>
+
+  <div class="catalog-layout">
+    <aside class="filters-panel">
+      <div class="filter-section">
+        <div class="filter-label">Катэгорыя</div>
+        <div class="filter-chips" id="categoryChips">
+          <span class="chip active" data-val="">Все</span>
+          <span class="chip" data-val="grain">Зерновые</span>
+          <span class="chip" data-val="vegetable">Овощные</span>
+          <span class="chip" data-val="oilseed">Масличные</span>
+          <span class="chip" data-val="fruit">Плодовые</span>
+          <span class="chip" data-val="forage">Кормовые</span>
+          <span class="chip" data-val="technical">Технические</span>
+        </div>
+      </div>
+      <div class="filter-section">
+        <div class="filter-label">Культура</div>
+        <select class="filter-select" id="cultureFilter">
+          <option value="">Все культуры</option>
+        </select>
+      </div>
+      <div class="filter-section">
+        <div class="filter-label">Статус</div>
+        <div class="filter-chips" id="statusChips">
+          <span class="chip active" data-val="">Все</span>
+          <span class="chip" data-val="active">Допущен</span>
+          <span class="chip" data-val="excluded">Исключён</span>
+          <span class="chip" data-val="pending">На рассмотрении</span>
+        </div>
+      </div>
+      <div class="filter-section">
+        <div class="filter-label">Год регистрации</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem">
+          <input class="filter-input" type="number" id="yearFrom" placeholder="от" min="1900" max="2025">
+          <input class="filter-input" type="number" id="yearTo" placeholder="до" min="1900" max="2025">
+        </div>
+      </div>
+      <div class="filter-section">
+        <div class="filter-label">Область допуска</div>
+        <select class="filter-select" id="regionFilter">
+          <option value="">Все области</option>
+          <option>Брестская</option>
+          <option>Витебская</option>
+          <option>Гомельская</option>
+          <option>Гродненская</option>
+          <option>Могилёвская</option>
+          <option>Минская</option>
+        </select>
+      </div>
+      <button class="btn-reset" onclick="resetFilters()">Сбросить фильтры</button>
+    </aside>
+
+    <main class="catalog-main">
+      <div class="catalog-toolbar">
+        <div class="search-box">
+          <input class="search-input" type="text" id="searchInput" placeholder="Поиск по названию, оригинатору...">
+          <button class="btn-search" onclick="loadVarieties(1)">Найти</button>
+        </div>
+        <select class="sort-select" id="sortSelect" onchange="loadVarieties(1)">
+          <option value="name|ASC">Название А–Я</option>
+          <option value="name|DESC">Название Я–А</option>
+          <option value="yearRegistered|DESC">Год: новые</option>
+          <option value="yearRegistered|ASC">Год: старые</option>
+          <option value="viewCount|DESC">Популярные</option>
+        </select>
+        <div class="export-btns">
+          <button class="btn-export" onclick="exportExcel()" title="Экспорт в Excel">Excel</button>
+          <button class="btn-export" onclick="exportPdf()" title="Экспорт в PDF">PDF</button>
+        </div>
+        <span class="catalog-count" id="catalogCount"></span>
+      </div>
+
+      <div class="varieties-table">
+        <div class="table-header">
+          <span>Название / Культура</span>
+          <span>Оригинатор</span>
+          <span>Год</span>
+          <span>Урожайность</span>
+          <span>Регионы</span>
+          <span>Статус</span>
+        </div>
+        <div id="tableBody"><div class="loading">Загрузка данных...</div></div>
+      </div>
+
+      <div class="pagination" id="pagination"></div>
+    </main>
+  </div>
+</div>
+
+<script src="/js/api.js"></script>
+<script src="/js/auth.js"></script>
+<script>
+let currentPage = 1;
+
+function getFilters() {
+  const sort = document.getElementById('sortSelect').value.split('|');
+  return {
+    search: document.getElementById('searchInput').value,
+    category: document.querySelector('#categoryChips .chip.active')?.dataset.val || '',
+    cultureId: document.getElementById('cultureFilter').value,
+    status: document.querySelector('#statusChips .chip.active')?.dataset.val || '',
+    yearFrom: document.getElementById('yearFrom').value,
+    yearTo: document.getElementById('yearTo').value,
+    region: document.getElementById('regionFilter').value,
+    sortBy: sort[0], sortDir: sort[1]
+  };
+}
+
+async function loadVarieties(page = 1) {
+  currentPage = page;
+  const params = { ...getFilters(), page, limit: 20 };
+  document.getElementById('tableBody').innerHTML = '<div class="loading">Загрузка...</div>';
+  try {
+    const res = await api.get('/varieties?' + buildQueryString(params));
+    const { data, pagination } = res;
+    document.getElementById('catalogCount').textContent = `Найдено: ${pagination.total}`;
+    document.getElementById('pageSubtitle').textContent = `${pagination.total} записей в базе данных`;
+
+    if (!data.length) {
+      document.getElementById('tableBody').innerHTML = '<div class="loading">Ничего не найдено</div>';
+      document.getElementById('pagination').innerHTML = '';
+      return;
+    }
+
+    const statusLabels = { active: 'Допущен', excluded: 'Исключён', pending: 'На рассмотрении' };
+    document.getElementById('tableBody').innerHTML = data.map(v => `
+      <div class="table-row" onclick="location.href='/pages/variety.html?id=${v.id}'">
+        <div>
+          <div class="row-name">${v.name}</div>
+          <div class="row-sci">${v.culture?.icon || ''} ${v.culture?.name || '—'}</div>
+        </div>
+        <div class="row-culture" style="font-size:.8rem;color:var(--gray)">${v.breeder || '—'}</div>
+        <div class="row-year">${v.yearRegistered || '—'}</div>
+        <div class="row-yield">${v.yieldMin && v.yieldMax ? `${v.yieldMin}–${v.yieldMax} ${v.yieldUnit}` : '—'}</div>
+        <div style="font-size:.72rem;color:var(--gray)">${(v.admittedRegions || []).slice(0,2).join(', ')}${(v.admittedRegions||[]).length > 2 ? '...' : ''}</div>
+        <div><span class="status-badge status-${v.status}">${statusLabels[v.status] || v.status}</span></div>
+      </div>`).join('');
+
+    renderPagination(pagination);
+  } catch(e) {
+    document.getElementById('tableBody').innerHTML = `<div class="error-msg">${e.message}</div>`;
+  }
+}
+
+function renderPagination({ page, pages }) {
+  const el = document.getElementById('pagination');
+  if (pages <= 1) { el.innerHTML = ''; return; }
+  let html = `<button class="page-btn" ${page <= 1 ? 'disabled' : ''} onclick="loadVarieties(${page-1})">← Назад</button>`;
+  const start = Math.max(1, page-2), end = Math.min(pages, page+2);
+  if (start > 1) html += `<button class="page-btn" onclick="loadVarieties(1)">1</button>${start > 2 ? '<span style="padding:.5rem">…</span>' : ''}`;
+  for (let i = start; i <= end; i++) html += `<button class="page-btn ${i===page?'active':''}" onclick="loadVarieties(${i})">${i}</button>`;
+  if (end < pages) html += `${end < pages-1 ? '<span style="padding:.5rem">…</span>' : ''}<button class="page-btn" onclick="loadVarieties(${pages})">${pages}</button>`;
+  html += `<button class="page-btn" ${page >= pages ? 'disabled' : ''} onclick="loadVarieties(${page+1})">Наперад →</button>`;
+  el.innerHTML = html;
+}
+
+function resetFilters() {
+  document.getElementById('searchInput').value = '';
+  document.getElementById('cultureFilter').value = '';
+  document.getElementById('yearFrom').value = '';
+  document.getElementById('yearTo').value = '';
+  document.getElementById('regionFilter').value = '';
+  document.querySelectorAll('#categoryChips .chip').forEach((c,i) => c.classList.toggle('active', i===0));
+  document.querySelectorAll('#statusChips .chip').forEach((c,i) => c.classList.toggle('active', i===0));
+  loadVarieties(1);
+}
+
+function exportExcel() {
+  window.open('/api/varieties/export/excel', '_blank');
+}
+
+function exportPdf() {
+  window.open('/api/varieties/export/pdf', '_blank');
+}
+
+// Chips
+document.querySelectorAll('.filter-chips').forEach(group => {
+  group.addEventListener('click', e => {
+    const chip = e.target.closest('.chip');
+    if (!chip) return;
+    group.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+    chip.classList.add('active');
+    if (group.id === 'categoryChips') {
+      loadCultures(chip.dataset.val);
+    }
+    loadVarieties(1);
+  });
+});
+
+document.getElementById('searchInput').addEventListener('keydown', e => { if (e.key === 'Enter') loadVarieties(1); });
+document.getElementById('cultureFilter').addEventListener('change', () => loadVarieties(1));
+document.getElementById('regionFilter').addEventListener('change', () => loadVarieties(1));
+
+async function loadCultures(category = '') {
+  const res = await api.get('/cultures');
+  const sel = document.getElementById('cultureFilter');
+  const filtered = category ? res.data.filter(c => c.category === category) : res.data;
+  sel.innerHTML = '<option value="">Все культуры</option>' +
+    filtered.map(c => `<option value="${c.id}">${c.icon || ''} ${c.name}</option>`).join('');
+}
+
+// Init
+(async () => {
+  updateNavAuth();
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('category')) {
+    document.querySelectorAll('#categoryChips .chip').forEach(c => {
+      c.classList.toggle('active', c.dataset.val === params.get('category'));
+    });
+  }
+  if (params.get('cultureId')) {
+    await loadCultures();
+    document.getElementById('cultureFilter').value = params.get('cultureId');
+  } else {
+    await loadCultures(params.get('category') || '');
+  }
+  loadVarieties(1);
+})();
+</script>
+</body>
+</html>
