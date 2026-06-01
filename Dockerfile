@@ -1,8 +1,8 @@
 FROM node:20-alpine
 WORKDIR /app
-COPY package*.json ./
+COPY backend/package*.json ./
 RUN npm install --omit=dev
-COPY . .
-COPY ../frontend /app/frontend
+COPY backend/ ./
+COPY frontend/ ./frontend/
 EXPOSE 3000
 CMD ["node", "src/index.js"]
