@@ -1,18 +1,21 @@
 const { Op } = require('sequelize');
 const { Variety, Culture, User, Favorite, VarietyHistory, sequelize } = require('../models');
 const XLSX = require('xlsx');
-const PDFDocument = require('pdfkit');
+// const PdfPrinter = require('pdfmake/src/printer');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 
-// Fonts for PDF with Cyrillic support
-const fonts = {
-  regular: path.join(__dirname, '../../fonts/PTSans-Regular.ttf'),
-  bold: path.join(__dirname, '../../fonts/PTSans-Bold.ttf'),
-  italic: path.join(__dirname, '../../fonts/PTSans-Italic.ttf'),
-  boldItalic: path.join(__dirname, '../../fonts/PTSans-BoldItalic.ttf')
-};
+// Initialize pdfmake with fonts
+// const fonts = {
+//   Roboto: {
+//     normal: path.join(__dirname, '../../node_modules/pdfmake/fonts/Roboto/Roboto-Regular.ttf'),
+//     bold: path.join(__dirname, '../../node_modules/pdfmake/fonts/Roboto/Roboto-Medium.ttf'),
+//     italics: path.join(__dirname, '../../node_modules/pdfmake/fonts/Roboto/Roboto-Italic.ttf'),
+//     bolditalics: path.join(__dirname, '../../node_modules/pdfmake/fonts/Roboto/Roboto-MediumItalic.ttf')
+//   }
+// };
+// const printer = new PdfPrinter(fonts);
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, path.join(__dirname, '../../../frontend/uploads')),
@@ -241,9 +244,8 @@ const exportExcel = async (req, res) => {
 };
 
 // GET /api/varieties/export/pdf
+// GET /api/varieties/export/pdf
 const exportPdf = async (req, res) => {
-  console.log('[PDF Export] Starting...');
-  console.log('[PDF Export] Font paths:', fonts);
   try {
     const varieties = await Variety.findAll({
       include: [
@@ -253,103 +255,58 @@ const exportPdf = async (req, res) => {
       order: [['name', 'ASC']]
     });
 
-    const doc = new PDFDocument({
-      size: 'A4',
-      layout: 'landscape',
-      margin: 40,
-      info: {
-        Title: 'Каталог сортов',
-        Author: 'AgroSort'
-      }
-    });
+    const rows = varieties.map(v => `
+      <tr>
+        <td>${v.name || ''}</td>
+        <td>${v.culture?.name || ''}</td>
+        <td>${v.status === 'active' ? 'Допущен' : v.status === 'excluded' ? 'Исключён' : 'На рассмотрении'}</td>
+        <td>${v.yearRegistered || ''}</td>
+        <td>${v.breeder || ''}</td>
+        <td>${v.admittedRegions?.join(', ') || ''}</td>
+      </tr>`).join('');
 
-    // Register fonts with Cyrillic support
-    console.log('[PDF Export] Checking fonts exist:', {
-      regular: fs.existsSync(fonts.regular),
-      bold: fs.existsSync(fonts.bold),
-      italic: fs.existsSync(fonts.italic),
-      boldItalic: fs.existsSync(fonts.boldItalic)
-    });
+    const html = `<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Каталог сортов AgroSort</title>
+<style>
+  body { font-family: Arial, sans-serif; font-size: 11px; margin: 20px; }
+  h1 { text-align: center; font-size: 16px; margin-bottom: 10px; }
+  p { text-align: center; color: #666; margin-bottom: 15px; }
+  table { width: 100%; border-collapse: collapse; }
+  th { background: #d4efd4; padding: 6px 8px; border: 1px solid #999; text-align: left; }
+  td { padding: 5px 8px; border: 1px solid #ccc; }
+  tr:nth-child(even) { background: #f5f5f5; }
+  .footer { margin-top: 20px; font-size: 10px; color: #666; text-align: right; }
+  @media print { body { margin: 10px; } }
+</style>
+</head>
+<body>
+<h1>Каталог сортов сельскохозяйственных культур — AgroSort</h1>
+<p>Всего записей: ${varieties.length} · Дата: ${new Date().toLocaleDateString('ru-RU')}</p>
+<table>
+  <thead>
+    <tr>
+      <th>Название сорта</th>
+      <th>Культура</th>
+      <th>Статус</th>
+      <th>Год</th>
+      <th>Оригинатор</th>
+      <th>Регионы допуска</th>
+    </tr>
+  </thead>
+  <tbody>${rows}</tbody>
+</table>
+<div class="footer">AgroSort · ${new Date().toLocaleDateString('ru-RU')}</div>
+<script>window.onload = () => window.print();</script>
+</body>
+</html>`;
 
-    try {
-      doc.registerFont('PTSans', fonts.regular, fonts.bold, fonts.italic, fonts.boldItalic);
-      doc.registerFont('PTSans-Bold', fonts.bold, fonts.bold, fonts.boldItalic, fonts.boldItalic);
-      console.log('[PDF Export] Fonts registered successfully');
-    } catch (fontErr) {
-      console.error('[PDF Export] Font registration error:', fontErr);
-      return res.status(500).json({ error: 'Ошибка регистрации шрифтов', detail: fontErr.message });
-    }
-
-    res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', 'attachment; filename=agrosort_varieties.pdf');
-
-    doc.pipe(res);
-
-    // Use custom font
-    doc.font('PTSans-Bold');
-
-    // Title
-    doc.fontSize(18).text('Каталог сортов сельскохозяйственных культур', { align: 'center' });
-    doc.moveDown(2);
-
-    // Table header
-    const tableTop = doc.y;
-    const colWidths = [150, 120, 100, 60, 150];
-    const headers = ['Название', 'Культура', 'Статус', 'Год', 'Оригинатор'];
-
-    doc.font('PTSans-Bold').fontSize(10);
-    let x = 40;
-    headers.forEach((h, i) => {
-      doc.text(h, x, tableTop, { width: colWidths[i], align: 'left' });
-      x += colWidths[i];
-    });
-
-    // Draw header line
-    doc.moveTo(40, tableTop + 15).lineTo(787, tableTop + 15).stroke('#CCCCCC');
-
-    // Table rows
-    doc.font('PTSans').fontSize(9);
-    let y = tableTop + 20;
-
-    varieties.forEach((v, index) => {
-      // Check if we need a new page
-      if (y > 500) {
-        doc.addPage();
-        y = 40;
-      }
-
-      const status = v.status === 'active' ? 'Допущен' : v.status === 'excluded' ? 'Исключён' : 'На рассмотрении';
-
-      x = 40;
-      const rowData = [
-        v.name || '',
-        v.culture?.name || '',
-        status,
-        String(v.yearRegistered || ''),
-        v.breeder || ''
-      ];
-
-      rowData.forEach((cell, i) => {
-        doc.text(cell, x, y, { width: colWidths[i], align: 'left' });
-        x += colWidths[i];
-      });
-
-      // Alternate row background
-      if (index % 2 === 0) {
-        doc.rect(40, y - 2, 747, 14).fill('#F5F5F5');
-        // Redraw text on top of background
-        x = 40;
-        rowData.forEach((cell, i) => {
-          doc.text(cell, x, y, { width: colWidths[i], align: 'left' });
-          x += colWidths[i];
-        });
-      }
-
-      y += 14;
-    });
-
-    doc.end();
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    res.send(html);
   } catch (err) {
+    console.error('PDF EXPORT ERROR:', err);
     res.status(500).json({ error: 'Ошибка экспорта PDF', detail: err.message });
   }
 };
