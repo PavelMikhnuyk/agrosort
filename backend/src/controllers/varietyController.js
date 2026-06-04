@@ -1,7 +1,7 @@
 const { Op } = require('sequelize');
 const { Variety, Culture, User, Favorite, VarietyHistory, sequelize } = require('../models');
 const XLSX = require('xlsx');
-const pdfmake = require('pdfmake');
+const pdfmake = require('pdfmake/build/pdfmake');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
@@ -12,7 +12,7 @@ const fonts = {
     normal: path.join(__dirname, '../../node_modules/pdfmake/fonts/Roboto/Roboto-Regular.ttf'),
     bold: path.join(__dirname, '../../node_modules/pdfmake/fonts/Roboto/Roboto-Medium.ttf'),
     italics: path.join(__dirname, '../../node_modules/pdfmake/fonts/Roboto/Roboto-Italic.ttf'),
-    bolditalics: path.join(__dirname, '../../node_modules/pdfmake/fonts/Roboto/Roboto-MediumItalic.ttf')
+    bolditalics: path.join(__dirname, '../../n  ode_modules/pdfmake/fonts/Roboto/Roboto-MediumItalic.ttf')
   }
 };
 const printer = new pdfmake(fonts);
