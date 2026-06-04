@@ -1,8 +1,21 @@
 const { Op } = require('sequelize');
 const { Variety, Culture, User, Favorite, VarietyHistory, sequelize } = require('../models');
 const XLSX = require('xlsx');
+const pdfmake = require('pdfmake');
 const multer = require('multer');
 const path = require('path');
+const fs = require('fs');
+
+// Initialize pdfmake with fonts
+const fonts = {
+  Roboto: {
+    normal: path.join(__dirname, '../../node_modules/pdfmake/fonts/Roboto/Roboto-Regular.ttf'),
+    bold: path.join(__dirname, '../../node_modules/pdfmake/fonts/Roboto/Roboto-Medium.ttf'),
+    italics: path.join(__dirname, '../../node_modules/pdfmake/fonts/Roboto/Roboto-Italic.ttf'),
+    bolditalics: path.join(__dirname, '../../node_modules/pdfmake/fonts/Roboto/Roboto-MediumItalic.ttf')
+  }
+};
+const printer = new pdfmake(fonts);
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, path.join(__dirname, '../../../frontend/uploads')),
@@ -22,8 +35,6 @@ const upload = multer({
     else cb(new Error('Только изображения: jpg, png, webp'));
   }
 });
-
-// PDF export disabled (pdfmake v0.3 incompatibility)
 
 // GET /api/varieties - список с фильтрами и пагинацией
 const getAll = async (req, res) => {
@@ -234,7 +245,78 @@ const exportExcel = async (req, res) => {
 
 // GET /api/varieties/export/pdf
 const exportPdf = async (req, res) => {
-  res.status(501).json({ error: 'Экспорт в PDF временно недоступен' });
+  try {
+    const varieties = await Variety.findAll({
+      include: [
+        { model: Culture, as: 'culture', attributes: ['name', 'category'] },
+        { model: User, as: 'author', attributes: ['name'] }
+      ],
+      order: [['name', 'ASC']]
+    });
+
+    const tableBody = [
+      [
+        { text: 'Название', style: 'tableHeader' },
+        { text: 'Культура', style: 'tableHeader' },
+        { text: 'Статус', style: 'tableHeader' },
+        { text: 'Год', style: 'tableHeader' },
+        { text: 'Оригинатор', style: 'tableHeader' }
+      ]
+    ];
+
+    varieties.forEach(v => {
+      tableBody.push([
+        v.name || '',
+        v.culture?.name || '',
+        v.status === 'active' ? 'Допущен' : v.status === 'excluded' ? 'Исключён' : 'На рассмотрении',
+        v.yearRegistered || '',
+        v.breeder || ''
+      ]);
+    });
+
+    const docDefinition = {
+      pageSize: 'A4',
+      pageOrientation: 'landscape',
+      pageMargins: [20, 40, 20, 40],
+      header: {
+        text: 'Каталог сортов сельскохозяйственных культур',
+        style: 'header',
+        margin: [20, 10, 20, 10]
+      },
+      content: [
+        {
+          table: {
+            headerRows: 1,
+            widths: ['*', '*', 'auto', 'auto', '*'],
+            body: tableBody
+          },
+          layout: {
+            fillColor: (rowIndex) => rowIndex === 0 ? '#CCCCCC' : null,
+            hLineWidth: () => 1,
+            vLineWidth: () => 1
+          }
+        }
+      ],
+      styles: {
+        header: { fontSize: 16, bold: true, alignment: 'center' },
+        tableHeader: { bold: true, fillColor: '#EEEEEE' }
+      }
+    };
+
+    const pdfDoc = printer.createPdfKitDocument(docDefinition);
+    const chunks = [];
+
+    pdfDoc.on('data', chunk => chunks.push(chunk));
+    pdfDoc.on('end', () => {
+      const result = Buffer.concat(chunks);
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', 'attachment; filename=agrosort_varieties.pdf');
+      res.send(result);
+    });
+    pdfDoc.end();
+  } catch (err) {
+    res.status(500).json({ error: 'Ошибка экспорта PDF', detail: err.message });
+  }
 };
 
 // POST /api/varieties/:id/image

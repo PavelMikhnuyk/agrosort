@@ -12,7 +12,14 @@ const api = {
       body: body ? JSON.stringify(body) : undefined
     });
     const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'Ошибка запроса');
+    if (!res.ok) {
+      // Если есть детали валидации, показываем их все
+      if (data.details && data.details.length > 0) {
+        const messages = data.details.map(d => d.message).join('; ');
+        throw new Error(messages);
+      }
+      throw new Error(data.error || 'Ошибка запроса');
+    }
     return data;
   },
 
