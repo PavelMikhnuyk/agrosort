@@ -242,6 +242,8 @@ const exportExcel = async (req, res) => {
 
 // GET /api/varieties/export/pdf
 const exportPdf = async (req, res) => {
+  console.log('[PDF Export] Starting...');
+  console.log('[PDF Export] Font paths:', fonts);
   try {
     const varieties = await Variety.findAll({
       include: [
@@ -262,9 +264,21 @@ const exportPdf = async (req, res) => {
     });
 
     // Register fonts with Cyrillic support
-    doc.registerFont('PTSans', fonts.regular, fonts.bold);
-    doc.registerFont('PTSans-Bold', fonts.bold, fonts.bold);
-    doc.registerFont('PTSans-Italic', fonts.italic, fonts.bold);
+    console.log('[PDF Export] Checking fonts exist:', {
+      regular: fs.existsSync(fonts.regular),
+      bold: fs.existsSync(fonts.bold),
+      italic: fs.existsSync(fonts.italic),
+      boldItalic: fs.existsSync(fonts.boldItalic)
+    });
+
+    try {
+      doc.registerFont('PTSans', fonts.regular, fonts.bold, fonts.italic, fonts.boldItalic);
+      doc.registerFont('PTSans-Bold', fonts.bold, fonts.bold, fonts.boldItalic, fonts.boldItalic);
+      console.log('[PDF Export] Fonts registered successfully');
+    } catch (fontErr) {
+      console.error('[PDF Export] Font registration error:', fontErr);
+      return res.status(500).json({ error: 'Ошибка регистрации шрифтов', detail: fontErr.message });
+    }
 
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', 'attachment; filename=agrosort_varieties.pdf');
