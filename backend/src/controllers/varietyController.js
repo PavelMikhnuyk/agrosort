@@ -1,21 +1,10 @@
 const { Op } = require('sequelize');
 const { Variety, Culture, User, Favorite, VarietyHistory, sequelize } = require('../models');
 const XLSX = require('xlsx');
-const PdfPrinter = require('pdfmake/src/printer');
+const PDFDocument = require('pdfkit');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
-
-// Initialize pdfmake with fonts
-const fonts = {
-  Roboto: {
-    normal: path.join(__dirname, '../../node_modules/pdfmake/fonts/Roboto/Roboto-Regular.ttf'),
-    bold: path.join(__dirname, '../../node_modules/pdfmake/fonts/Roboto/Roboto-Medium.ttf'),
-    italics: path.join(__dirname, '../../node_modules/pdfmake/fonts/Roboto/Roboto-Italic.ttf'),
-    bolditalics: path.join(__dirname, '../../n  ode_modules/pdfmake/fonts/Roboto/Roboto-MediumItalic.ttf')
-  }
-};
-const printer = new PdfPrinter(fonts);
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, path.join(__dirname, '../../../frontend/uploads')),
@@ -254,66 +243,78 @@ const exportPdf = async (req, res) => {
       order: [['name', 'ASC']]
     });
 
-    const tableBody = [
-      [
-        { text: 'Название', style: 'tableHeader' },
-        { text: 'Культура', style: 'tableHeader' },
-        { text: 'Статус', style: 'tableHeader' },
-        { text: 'Год', style: 'tableHeader' },
-        { text: 'Оригинатор', style: 'tableHeader' }
-      ]
-    ];
+    const doc = new PDFDocument({
+      size: 'A4',
+      layout: 'landscape',
+      margin: 40
+    });
 
-    varieties.forEach(v => {
-      tableBody.push([
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', 'attachment; filename=agrosort_varieties.pdf');
+
+    doc.pipe(res);
+
+    // Title
+    doc.fontSize(18).text('Каталог сортов сельскохозяйственных культур', { align: 'center' });
+    doc.moveDown(2);
+
+    // Table header
+    const tableTop = doc.y;
+    const colWidths = [150, 120, 100, 60, 150];
+    const headers = ['Название', 'Культура', 'Статус', 'Год', 'Оригинатор'];
+
+    doc.font('Helvetica-Bold').fontSize(10);
+    let x = 40;
+    headers.forEach((h, i) => {
+      doc.text(h, x, tableTop, { width: colWidths[i], align: 'left' });
+      x += colWidths[i];
+    });
+
+    // Draw header line
+    doc.moveTo(40, tableTop + 15).lineTo(787, tableTop + 15).stroke('#CCCCCC');
+
+    // Table rows
+    doc.font('Helvetica').fontSize(9);
+    let y = tableTop + 20;
+
+    varieties.forEach((v, index) => {
+      // Check if we need a new page
+      if (y > 500) {
+        doc.addPage();
+        y = 40;
+      }
+
+      const status = v.status === 'active' ? 'Допущен' : v.status === 'excluded' ? 'Исключён' : 'На рассмотрении';
+
+      x = 40;
+      const rowData = [
         v.name || '',
         v.culture?.name || '',
-        v.status === 'active' ? 'Допущен' : v.status === 'excluded' ? 'Исключён' : 'На рассмотрении',
-        v.yearRegistered || '',
+        status,
+        String(v.yearRegistered || ''),
         v.breeder || ''
-      ]);
-    });
+      ];
 
-    const docDefinition = {
-      pageSize: 'A4',
-      pageOrientation: 'landscape',
-      pageMargins: [20, 40, 20, 40],
-      header: {
-        text: 'Каталог сортов сельскохозяйственных культур',
-        style: 'header',
-        margin: [20, 10, 20, 10]
-      },
-      content: [
-        {
-          table: {
-            headerRows: 1,
-            widths: ['*', '*', 'auto', 'auto', '*'],
-            body: tableBody
-          },
-          layout: {
-            fillColor: (rowIndex) => rowIndex === 0 ? '#CCCCCC' : null,
-            hLineWidth: () => 1,
-            vLineWidth: () => 1
-          }
-        }
-      ],
-      styles: {
-        header: { fontSize: 16, bold: true, alignment: 'center' },
-        tableHeader: { bold: true, fillColor: '#EEEEEE' }
+      rowData.forEach((cell, i) => {
+        doc.text(cell, x, y, { width: colWidths[i], align: 'left' });
+        x += colWidths[i];
+      });
+
+      // Alternate row background
+      if (index % 2 === 0) {
+        doc.rect(40, y - 2, 747, 14).fill('#F5F5F5');
+        // Redraw text on top of background
+        x = 40;
+        rowData.forEach((cell, i) => {
+          doc.text(cell, x, y, { width: colWidths[i], align: 'left' });
+          x += colWidths[i];
+        });
       }
-    };
 
-    const pdfDoc = printer.createPdfKitDocument(docDefinition);
-    const chunks = [];
-
-    pdfDoc.on('data', chunk => chunks.push(chunk));
-    pdfDoc.on('end', () => {
-      const result = Buffer.concat(chunks);
-      res.setHeader('Content-Type', 'application/pdf');
-      res.setHeader('Content-Disposition', 'attachment; filename=agrosort_varieties.pdf');
-      res.send(result);
+      y += 14;
     });
-    pdfDoc.end();
+
+    doc.end();
   } catch (err) {
     res.status(500).json({ error: 'Ошибка экспорта PDF', detail: err.message });
   }
