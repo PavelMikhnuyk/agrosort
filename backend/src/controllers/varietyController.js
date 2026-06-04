@@ -6,6 +6,14 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 
+// Fonts for PDF with Cyrillic support
+const fonts = {
+  regular: path.join(__dirname, '../../fonts/PTSans-Regular.ttf'),
+  bold: path.join(__dirname, '../../fonts/PTSans-Bold.ttf'),
+  italic: path.join(__dirname, '../../fonts/PTSans-Italic.ttf'),
+  boldItalic: path.join(__dirname, '../../fonts/PTSans-BoldItalic.ttf')
+};
+
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, path.join(__dirname, '../../../frontend/uploads')),
   filename: (req, file, cb) => {
@@ -246,13 +254,25 @@ const exportPdf = async (req, res) => {
     const doc = new PDFDocument({
       size: 'A4',
       layout: 'landscape',
-      margin: 40
+      margin: 40,
+      info: {
+        Title: 'Каталог сортов',
+        Author: 'AgroSort'
+      }
     });
+
+    // Register fonts with Cyrillic support
+    doc.registerFont('PTSans', fonts.regular, fonts.bold);
+    doc.registerFont('PTSans-Bold', fonts.bold, fonts.bold);
+    doc.registerFont('PTSans-Italic', fonts.italic, fonts.bold);
 
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', 'attachment; filename=agrosort_varieties.pdf');
 
     doc.pipe(res);
+
+    // Use custom font
+    doc.font('PTSans-Bold');
 
     // Title
     doc.fontSize(18).text('Каталог сортов сельскохозяйственных культур', { align: 'center' });
@@ -263,7 +283,7 @@ const exportPdf = async (req, res) => {
     const colWidths = [150, 120, 100, 60, 150];
     const headers = ['Название', 'Культура', 'Статус', 'Год', 'Оригинатор'];
 
-    doc.font('Helvetica-Bold').fontSize(10);
+    doc.font('PTSans-Bold').fontSize(10);
     let x = 40;
     headers.forEach((h, i) => {
       doc.text(h, x, tableTop, { width: colWidths[i], align: 'left' });
@@ -274,7 +294,7 @@ const exportPdf = async (req, res) => {
     doc.moveTo(40, tableTop + 15).lineTo(787, tableTop + 15).stroke('#CCCCCC');
 
     // Table rows
-    doc.font('Helvetica').fontSize(9);
+    doc.font('PTSans').fontSize(9);
     let y = tableTop + 20;
 
     varieties.forEach((v, index) => {
