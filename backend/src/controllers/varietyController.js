@@ -1,7 +1,7 @@
 const { Op } = require('sequelize');
 const { Variety, Culture, User, Favorite, VarietyHistory, sequelize } = require('../models');
 const XLSX = require('xlsx');
-const pdfmake = require('pdfmake/build/pdfmake');
+const PdfPrinter = require('pdfmake/src/printer');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
@@ -15,7 +15,7 @@ const fonts = {
     bolditalics: path.join(__dirname, '../../n  ode_modules/pdfmake/fonts/Roboto/Roboto-MediumItalic.ttf')
   }
 };
-const printer = new pdfmake(fonts);
+const printer = new PdfPrinter(fonts);
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, path.join(__dirname, '../../../frontend/uploads')),
